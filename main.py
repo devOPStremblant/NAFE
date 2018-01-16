@@ -1,3 +1,4 @@
+from __future__ import division
 import cv2
 from matplotlib import pyplot as plt
 from scipy import misc
@@ -5,9 +6,11 @@ import numpy as np
 from PIL import Image
 
 
+
 sd = 1
 coeffecients = []
 runningTotal = 0
+a = b = 0
 
 
 def initialize():
@@ -31,32 +34,54 @@ def iterateThroughImagePixels(im):
         for y in range(0, h):
             print "Pixel %d %d" % (x, y)
 
-def findQuadrant(im):
+def findPolarCoordinates(im):
     w, h = im.size
     a = w / 2
     b = h / 2
     print a, b
     for x in range (0, w):
         for y in range (0, h):
-            if x < a and y < b:
-                print "%d and %d First Quadrant" % (x, y)
-                # xl = x - a
-                # yl = b - y
-            elif x > a and y > b:
-                print "%d and %d Second Quadrant" % (x, y)
-                # xl = x - a
-                # yl = b - y
-            elif x < a and y > b:
-                print "%d and %d Third Quadrant" % (x, y)
-                # xl = x - a
-                # yl = b - y
-            else: 
-                print "%d and %d Fourth Quadrant" % (x, y)
-                # xl = x - a
-                # yl = b - y
+            xl = x - a
+            yl = b - y
 
+            r = findRadius(xl, yl)
+            varphi = calculateDegrees(xl,yl, findQuadrant(x, y))
+            print "Radius of %d, %d is %f" % (x, y, r)
+            print "Varphi of %d, %d is %f" % (xl, yl, varphi)
+           
 
+def findQuadrant(x, y):
+    if x > a and y < b:
+        return 1
+    elif x > a and y > b:
+        return 2
+    elif x < a and y > b:
+        return 3
+    else: 
+        return 4
+    return 
+    
 
+def findRadius(xl, yl):
+    r = np.sqrt((xl*xl) + (yl*yl))
+    return r
+
+def calculateDegrees(xl, yl, q):
+    print "Quadrant %d" % q
+    print "(xl, yl) : %d, %d" % (xl, yl)
+    if (xl == 0):
+        return 0
+
+    degrees = 0
+    if(q == 1):
+        degrees = np.arctan(abs(yl)/(xl))
+    else:
+        degrees = (q*90) - np.rad2deg(np.arctan(abs(yl)/abs(xl)))
+    print q*90
+    print yl/xl
+    print np.rad2deg(np.arctan(yl/xl))
+    print degrees
+    return degrees
 
 def calculateKernel(rho, phi, r, varphi):
     # print "**************"
@@ -88,7 +113,11 @@ def normalize(coeffecients):
 o_img = readImage()
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
-findQuadrant(o_img)
+# findPolarCoordinates(o_img)
+calculateDegrees(84, 6, 4)
+calculateDegrees(-4,-6,3)
+calculateDegrees(4,-89, 4)
+calculateDegrees(-43,-21,2)
 
 l = [-1, 0, 1]
 for x in l:
