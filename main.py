@@ -7,10 +7,10 @@ from PIL import Image
 
 
 
-sd = 1
+sd = 2
 coeffecients = []
 runningTotal = 0
-a = b = 0
+x0 = y0 = 0
 
 
 def initialize():
@@ -36,26 +36,41 @@ def iterateThroughImagePixels(im):
 
 def findPolarCoordinates(im):
     w, h = im.size
-    a = w / 2
-    b = h / 2
-    print a, b
+    x0 = w / 2
+    y0 = h / 2
+    # print a, b
     for x in range (0, w):
         for y in range (0, h):
-            xl = x - a
-            yl = b - y
+            xl = x - x0
+            yl = y0 - y
 
             r = findRadius(xl, yl)
             varphi = calculateDegrees(xl,yl, findQuadrant(x, y))
-            print "Radius of %d, %d is %f" % (x, y, r)
-            print "Varphi of %d, %d is %f" % (xl, yl, varphi)
+
+            lowerRho = r - 2*sd
+            upperRho = r + 2*sd
+
+            lowerPhi = (varphi - ((2 * sd) / r))
+            upperPhi = (varphi + ((2 * sd) / r))
+
+            sumA = 0
+        
+            for rho in range(lowerRho, upperRho):
+                for phi  in range(lowerPhi, upperPhi):
+                    sumA += calculateKernel(rho, phi, r, varphi)
+
+            # print "Radius of %d, %d is %f" % (x, y, r)
+            # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
+            # get Pixel
+            # print im.getpixel((r,varphi))
            
 
 def findQuadrant(x, y):
-    if x > a and y < b:
+    if x > x0 and y < y0:
         return 1
-    elif x > a and y > b:
+    elif x > x0 and y > y0:
         return 2
-    elif x < a and y > b:
+    elif x < x0 and y > y0:
         return 3
     else: 
         return 4
@@ -67,8 +82,8 @@ def findRadius(xl, yl):
     return r
 
 def calculateDegrees(xl, yl, q):
-    print "Quadrant %d" % q
-    print "(xl, yl) : %d, %d" % (xl, yl)
+    # print "Quadrant %d" % q
+    # print "(xl, yl) : %d, %d" % (xl, yl)
     if (xl == 0):
         return np.rad2deg(np.arctan(0))
 
@@ -77,10 +92,10 @@ def calculateDegrees(xl, yl, q):
         degrees = np.arctan(abs(yl)/(xl))
     else:
         degrees = (q*90) - np.rad2deg(np.arctan(abs(yl)/abs(xl)))
-    print q*90
-    print yl/xl
-    print np.rad2deg(np.arctan(yl/xl))
-    print degrees
+    # print q*90
+    # print yl/xl
+    # print np.rad2deg(np.arctan(yl/xl))
+    # print degrees
     return degrees
 
 def calculateKernel(rho, phi, r, varphi):
