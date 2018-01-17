@@ -70,7 +70,7 @@ def calculateDegrees(xl, yl, q):
     print "Quadrant %d" % q
     print "(xl, yl) : %d, %d" % (xl, yl)
     if (xl == 0):
-        return 0
+        return np.rad2deg(np.arctan(0))
 
     degrees = 0
     if(q == 1):
@@ -113,11 +113,11 @@ def normalize(coeffecients):
 o_img = readImage()
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
-# findPolarCoordinates(o_img)
-calculateDegrees(84, 6, 4)
-calculateDegrees(-4,-6,3)
-calculateDegrees(4,-89, 4)
-calculateDegrees(-43,-21,2)
+findPolarCoordinates(o_img)
+# calculateDegrees(32, -19, 3)
+# calculateDegrees(22, 24,1)
+# calculateDegrees(0,0, 4)
+# calculateDegrees(-43,-21,2)
 
 l = [-1, 0, 1]
 for x in l:
