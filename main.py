@@ -4,14 +4,13 @@ from matplotlib import pyplot as plt
 from scipy import misc
 import numpy as np
 from PIL import Image
-
+import time
 
 
 sd = 2
 coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
-
 
 def initialize():
     imgHelper = ImageHelper()
@@ -32,20 +31,27 @@ def iterateThroughImagePixels(im):
     w, h = im.size
     for x in range(0, w):
         for y in range(0, h):
-            print "Pixel %d %d" % (x, y)
+            print im.getPixelValue(w, h)
 
-def findPolarCoordinates(im):
+def processImage(im) :
     w, h = im.size
     x0 = w / 2
     y0 = h / 2
-    # print a, b
+    print x0, y0
     for x in range (0, w):
         for y in range (0, h):
-            xl = x - x0
-            yl = y0 - y
+            # print "starting loop for %d, %d" % (x, y)
+            
+            q = findQuadrant(x, y,x0, y0)
+
+            xl, yl = calculatePixelOffset(x, y, q, x0, y0)
 
             r = findRadius(xl, yl)
-            varphi = calculateDegrees(xl,yl, findQuadrant(x, y))
+            varphi = calculateDegrees(xl,yl, q)
+
+            carX, carY = polToCar(r, varphi)
+
+            print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%f, %f)" % (x, y,q, xl, yl, r, varphi, carX, carY)
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
@@ -53,48 +59,99 @@ def findPolarCoordinates(im):
             lowerPhi = (varphi - ((2 * sd) / r))
             upperPhi = (varphi + ((2 * sd) / r))
 
+            # print "LowerRho Value: %f" %  lowerRho
+            # print "Upper Value: %f" % upperRho
+
             sumA = 0
+            rhoIndex = 0.001
         
-            for rho in range(lowerRho, upperRho):
-                for phi  in range(lowerPhi, upperPhi):
-                    sumA += calculateKernel(rho, phi, r, varphi)
+            # *** WHILE LOOP HERE
+
+            # print "end of loop %d, %d" % (x,y)
+            # for rho in range(lowerRho, upperRho):
+                # for phi  in range(lowerPhi, upperPhi):
+                    # sumA += calculateKernel(rho, phi, r, varphi)
 
             # print "Radius of %d, %d is %f" % (x, y, r)
             # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
             # get Pixel
             # print im.getpixel((r,varphi))
-           
+    print "Origin: %d, %d" % (x0, y0)
+    print fqCount, sqcount, tqcount, foqcount
 
-def findQuadrant(x, y):
-    if x > x0 and y < y0:
-        return 1
-    elif x > x0 and y > y0:
-        return 2
-    elif x < x0 and y > y0:
-        return 3
-    else: 
+def calculatePixelOffset(x, y, q, x0, y0):
+    if q == 1:
+        return [x - x0, y - y0]
+    if q == 2:
+        return [x0 - x, y - y0]
+    if q == 3:
+        return [x - x0, y0 - y]
+    if q == 4:
+        return [x0 - x, y0 - y]
+    if q == 0:
+        return [x,y]
+
+def dummyWhileLoop():
+    startTime = time.time()    
+    x = y = 0
+    count = 0
+    for x in range(0,100):
+        for y in range(0, 100):
+            
+            rhoIndex = 0.001
+            while rhoIndex < 100:
+                # print rhoIndex
+                rhoIndex += 0.001
+            count+=1
+            # print "End of Loop #%d" % count
+    print time.time() - startTime
+    
+    
+def polToCar(r, varphi):
+    xCordinate = r * np.cos(varphi)
+    yCoordinate = r * np.sin(varphi)
+    return [xCordinate, yCoordinate]
+
+def getPixelValue(r, varphi):
+    xCordinate = r * np.cos(varphi)
+    yCoordinate = r * np.sin(varphi)
+    # pixelValue = 
+
+def findQuadrant(x, y, x0, y0):
+    # print x, y, x0, y0
+    if x > x0 and y > y0:
+        # print "IV Quadrant"
         return 4
-    return 
+    elif x > x0 and y < y0:
+        # print "I Quadrant"
+        return 1
+    elif x < x0 and y > y0:
+        # print "III Quadrant"
+        return 3
+    elif x < x0 and y < y0:        
+        # print "II Quadrant"
+        return 2
+    return 0
     
 
 def findRadius(xl, yl):
     r = np.sqrt((xl*xl) + (yl*yl))
-    return r
+    return round(r, 3)
 
 def calculateDegrees(xl, yl, q):
     # print "Quadrant %d" % q
     # print "(xl, yl) : %d, %d" % (xl, yl)
-    if (xl == 0):
-        return np.rad2deg(np.arctan(0))
+    if (xl == 0 or q == 0):
+        return round(np.rad2deg(np.arctan(0)), 3)
 
     degrees = 0
     if(q == 1):
-        degrees = np.arctan(abs(yl)/(xl))
+        degrees = np.rad2deg(np.arctan(yl/xl))
     else:
-        degrees = (q*90) - np.rad2deg(np.arctan(abs(yl)/abs(xl)))
+        degrees = np.rad2deg(np.arctan(yl/xl)) + ((q-1)*90)
     # print q*90
     # print yl/xl
-    # print np.rad2deg(np.arctan(yl/xl))
+    print np.rad2deg(np.arctan(yl/xl))
     # print degrees
     return degrees
 
@@ -128,11 +185,13 @@ def normalize(coeffecients):
 o_img = readImage()
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
-findPolarCoordinates(o_img)
+processImage(o_img)
 # calculateDegrees(32, -19, 3)
 # calculateDegrees(22, 24,1)
 # calculateDegrees(0,0, 4)
 # calculateDegrees(-43,-21,2)
+
+# dummyWhileLoop()
 
 l = [-1, 0, 1]
 for x in l:
