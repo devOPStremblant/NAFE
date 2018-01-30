@@ -5,6 +5,7 @@ from scipy import misc
 import numpy as np
 from PIL import Image
 import time
+import math
 
 
 sd = 2
@@ -51,7 +52,8 @@ def processImage(im) :
 
             carX, carY = polToCar(r, varphi)
 
-            print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%f, %f)" % (x, y,q, xl, yl, r, varphi, carX, carY)
+            if q == 1:
+                print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX+x0, carY+y0)
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
@@ -80,17 +82,10 @@ def processImage(im) :
     print fqCount, sqcount, tqcount, foqcount
 
 def calculatePixelOffset(x, y, q, x0, y0):
-    if q == 1:
-        return [x - x0, y - y0]
-    if q == 2:
-        return [x0 - x, y - y0]
-    if q == 3:
-        return [x - x0, y0 - y]
-    if q == 4:
-        return [x0 - x, y0 - y]
     if q == 0:
         return [x,y]
-
+    return [x - x0, y0 - y]
+    
 def dummyWhileLoop():
     startTime = time.time()    
     x = y = 0
@@ -108,13 +103,14 @@ def dummyWhileLoop():
     
     
 def polToCar(r, varphi):
-    xCordinate = r * np.cos(varphi)
-    yCoordinate = r * np.sin(varphi)
-    return [xCordinate, yCoordinate]
+    # print "varphi in degrees: %f" % varphi
+    xCordinate = r * math.cos(np.deg2rad(varphi))
+    yCoordinate = r * math.sin(np.deg2rad(varphi))
+    return [math.floor(xCordinate), math.floor(yCoordinate)]
 
 def getPixelValue(r, varphi):
-    xCordinate = r * np.cos(varphi)
-    yCoordinate = r * np.sin(varphi)
+    xCordinate = r * np.rad2deg(np.cos(varphi))
+    yCoordinate = r * np.rad2deg(np.sin(varphi))
     # pixelValue = 
 
 def findQuadrant(x, y, x0, y0):
@@ -136,13 +132,13 @@ def findQuadrant(x, y, x0, y0):
 
 def findRadius(xl, yl):
     r = np.sqrt((xl*xl) + (yl*yl))
-    return round(r, 3)
+    return r
 
 def calculateDegrees(xl, yl, q):
     # print "Quadrant %d" % q
     # print "(xl, yl) : %d, %d" % (xl, yl)
     if (xl == 0 or q == 0):
-        return round(np.rad2deg(np.arctan(0)), 3)
+        return np.rad2deg(np.arctan(0))
 
     degrees = 0
     if(q == 1):
@@ -151,7 +147,7 @@ def calculateDegrees(xl, yl, q):
         degrees = np.rad2deg(np.arctan(yl/xl)) + ((q-1)*90)
     # print q*90
     # print yl/xl
-    print np.rad2deg(np.arctan(yl/xl))
+    # print np.arctan(yl/xl)
     # print degrees
     return degrees
 
@@ -183,6 +179,12 @@ def normalize(coeffecients):
 
 # initialize()
 o_img = readImage()
+print "Just a number"
+print np.cos(23)
+print "Radians to Degrees"
+print np.cos(np.rad2deg(23))
+print "Degrees to Radians"
+print np.cos(np.deg2rad(23))
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
 processImage(o_img)
