@@ -54,9 +54,7 @@ def processImage(im) :
             carX +=x0
             carY = y0-carY
             
-            if q == 1:
-                print xl, yl
-                print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
+            print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
