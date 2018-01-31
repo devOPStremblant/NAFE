@@ -51,9 +51,12 @@ def processImage(im) :
             varphi = calculateDegrees(xl,yl, q)
 
             carX, carY = polToCar(r, varphi)
-
+            carX +=x0
+            carY = y0-carY
+            
             if q == 1:
-                print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX+x0, carY+y0)
+                print xl, yl
+                print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
@@ -79,7 +82,6 @@ def processImage(im) :
             # get Pixel
             # print im.getpixel((r,varphi))
     print "Origin: %d, %d" % (x0, y0)
-    print fqCount, sqcount, tqcount, foqcount
 
 def calculatePixelOffset(x, y, q, x0, y0):
     if q == 0:
