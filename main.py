@@ -51,10 +51,11 @@ def processImage(im) :
             varphi = calculateDegrees(xl,yl, q)
 
             carX, carY = polToCar(r, varphi)
-            carX +=x0
+            carX += x0
             carY = y0-carY
-            if q == 2:
-                print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
+            # if q == 4:
+            # print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
+            print "Pixel (%d, %d) polar coordinates (%f, %f) gives back (%d, %d)" % (x, y, r, varphi, carX, carY)
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
@@ -141,12 +142,12 @@ def calculateDegrees(xl, yl, q):
         return np.rad2deg(np.arctan(0))
 
     degrees = 0
-    if(q == 1):
+    if(q == 1 or q == 4):
         degrees = np.rad2deg(np.arctan(yl/xl))
     elif (q == 2):
         degrees = np.rad2deg(np.arctan(abs(xl)/abs(yl))) + 90
     else:
-        degrees = np.rad2deg(np.arctan(yl/xl)) + ((q-1)*90)
+        degrees = np.rad2deg(np.arctan(abs(yl)/abs(xl))) + ((q-1)*90)
     # print q*90
     # print yl/xl
     # print np.arctan(yl/xl)
