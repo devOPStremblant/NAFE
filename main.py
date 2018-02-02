@@ -34,7 +34,7 @@ def iterateThroughImagePixels(im):
         for y in range(0, h):
             print im.getPixelValue(w, h)
 
-def processImage(im) :
+def processImage(im, newImg) :
     w, h = im.size
     x0 = w / 2
     y0 = h / 2
@@ -53,9 +53,11 @@ def processImage(im) :
             carX, carY = polToCar(r, varphi)
             carX += x0
             carY = y0-carY
+
+            getPixelValue(carX, carY, im)
             # if q == 4:
             # print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
-            print "Pixel (%d, %d) polar coordinates (%f, %f) gives back (%d, %d)" % (x, y, r, varphi, carX, carY)
+            # print "Pixel (%d, %d) polar coordinates (%f, %f) gives back (%d, %d)" % (x, y, r, varphi, carX, carY)
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
@@ -84,35 +86,30 @@ def processImage(im) :
 
 def calculatePixelOffset(x, y, q, x0, y0):
     if q == 0:
-        return [x,y]
+        return [x, y]
     return [x - x0, y0 - y]
-    
-def dummyWhileLoop():
-    startTime = time.time()    
-    x = y = 0
-    count = 0
-    for x in range(0,100):
-        for y in range(0, 100):
-            
-            rhoIndex = 0.001
-            while rhoIndex < 100:
-                # print rhoIndex
-                rhoIndex += 0.001
-            count+=1
-            # print "End of Loop #%d" % count
-    print time.time() - startTime
-    
-    
-def polToCar(r, varphi):
-    # print "varphi in degrees: %f" % varphi
-    xCordinate = r * math.cos(np.deg2rad(varphi))
-    yCoordinate = r * math.sin(np.deg2rad(varphi))
-    return [math.floor(xCordinate), math.floor(yCoordinate)]
 
-def getPixelValue(r, varphi):
-    xCordinate = r * np.rad2deg(np.cos(varphi))
-    yCoordinate = r * np.rad2deg(np.sin(varphi))
-    # pixelValue = 
+def polToCar(radius, varphi):
+    # print "varphi in degrees: %f" % varphi
+    x_coordinate = radius * math.cos(np.deg2rad(varphi))
+    y_coordinate = radius * math.sin(np.deg2rad(varphi))
+
+    if(x_coordinate < 0):
+        x = math.ceil(x_coordinate)
+    else:
+        x = math.floor(x_coordinate)
+
+    if(y_coordinate < 0):
+        y = math.ceil(y_coordinate)
+    else:
+        y = math.floor(y_coordinate)
+
+    return [int(x),int(y)]
+
+def getPixelValue(x, y, img):
+    print x, y
+    print img.getpixel((x, y))
+
 
 def findQuadrant(x, y, x0, y0):
     # print x, y, x0, y0
@@ -138,6 +135,21 @@ def findRadius(xl, yl):
 def calculateDegrees(xl, yl, q):
     # print "Quadrant %d" % q
     # print "(xl, yl) : %d, %d" % (xl, yl)
+
+    if(xl == 0 and yl == 0):
+        return 0
+
+    if(xl==0):
+        if(yl < 0):
+            return 270
+        else:
+            return 90
+    if(yl==0):
+        if(xl > 0):
+            return 0
+        else:
+            return 180
+    
     if (xl == 0 or q == 0):
         return np.rad2deg(np.arctan(0))
 
@@ -180,36 +192,19 @@ def normalize(coeffecients):
     print coeffecients
     return
 
+def copyImage(o_img):
+    newImg = Image.new(o_img.mode, o_img.size)
+
 # initialize()
 o_img = readImage()
-print "Just a number"
-print np.cos(23)
-print "Radians to Degrees"
-print np.cos(np.rad2deg(23))
-print "Degrees to Radians"
-print np.cos(np.deg2rad(23))
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
-processImage(o_img)
+c_img = copyImage(o_img)
+processImage(o_img, c_img)
 # calculateDegrees(32, -19, 3)
 # calculateDegrees(22, 24,1)
 # calculateDegrees(0,0, 4)
 # calculateDegrees(-43,-21,2)
-
-# dummyWhileLoop()
-
-l = [-1, 0, 1]
-for x in l:
-    tempX = x
-    for y in l:
-        tempY = y
-        # print "Cooefficient (%d, %d)" % (x, y)
-        # print "Coefficient (%d, %d)" % (tempX, tempY)
-        coefficient = calculateKernel(0, 5, tempX, tempY)
-        coeffecients.append(coefficient)
-        runningTotal += coefficient
-
-
 
 # normalize(coeffecients)
 # plt.show()
