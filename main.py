@@ -36,8 +36,8 @@ def iterateThroughImagePixels(im):
 
 def processImage(im, newImg) :
     w, h = im.size
-    x0 = w / 2
-    y0 = h / 2
+    x0 = int(w / 2)
+    y0 = int(h / 2)
     print x0, y0
     for x in range (0, w):
         for y in range (0, h):
@@ -108,6 +108,8 @@ def polToCar(radius, varphi):
 
 def getPixelValue(x, y, img):
     print x, y
+    if(x >= 132 or y >= 133):
+        return 0,0,0,255
     print img.getpixel((x, y))
 
 
