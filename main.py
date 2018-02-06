@@ -72,6 +72,7 @@ def processImage(im, newImg) :
             # print "Upper Value: %f" % upperRho
 
             sumA = 0
+            sumB = 0
             rhoIndex = lowerRho
             phiIndex = lowerPhi
 
@@ -83,11 +84,15 @@ def processImage(im, newImg) :
                     currentY = y0 - currentY
                     pv = getPixelValue(currentX, currentY, im)
                     print pv
-                    sumA += (pv[0] * calculateKernel(rhoIndex, phiIndex, r, varphi))
-                    print "Sum as of now is: %f" % (sumA)
+                    kernalValue = calculateKernel(rhoIndex, phiIndex, r, varphi)
+                    sumA += (pv[0] * kernalValue)
+                    sumB += kernalValue
                     phiIndex += 0.001
                 rhoIndex += 0.001
 
+            newPixelValue = sumA / sumB
+            [fx,fy] = polToCar(r, varphi)
+            newImg.putpixel((fx,fy), newPixelValue)
             # print "Radius of %d, %d is %f" % (x, y, r)
             # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
             # get Pixel
