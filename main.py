@@ -13,14 +13,15 @@ coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
 
+
 def initialize():
     imgHelper = ImageHelper()
     imgHelper.readImage()
 
 
-
-def readImage():
+def read_image():
     return Image.open('sample.png')
+
 
 def displayImageDimensions(im):
     w, h = im.size
@@ -28,11 +29,13 @@ def displayImageDimensions(im):
     print h
     # im.show()
 
+
 def iterateThroughImagePixels(im):
     w, h = im.size
     for x in range(0, w):
         for y in range(0, h):
             print im.getPixelValue(w, h)
+
 
 def processImage(im, newImg) :
     w, h = im.size
@@ -54,7 +57,7 @@ def processImage(im, newImg) :
             carX += x0
             carY = y0-carY
 
-            getPixelValue(carX, carY, im)
+            
             # if q == 4:
             # print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
             # print "Pixel (%d, %d) polar coordinates (%f, %f) gives back (%d, %d)" % (x, y, r, varphi, carX, carY)
@@ -69,14 +72,21 @@ def processImage(im, newImg) :
             # print "Upper Value: %f" % upperRho
 
             sumA = 0
-            rhoIndex = 0.001
-        
-            # *** WHILE LOOP HERE
+            rhoIndex = lowerRho
+            phiIndex = lowerPhi
 
-            # print "end of loop %d, %d" % (x,y)
-            # for rho in range(lowerRho, upperRho):
-                # for phi  in range(lowerPhi, upperPhi):
-                    # sumA += calculateKernel(rho, phi, r, varphi)
+            while rhoIndex < upperRho:
+                while phiIndex < upperPhi:
+                    print "Current Rho is %f and Current Phi is %f " % (rhoIndex, phiIndex)
+                    currentX, currentY = polToCar(r + rhoIndex, phiIndex + varphi)
+                    currentX += x0
+                    currentY = y0 - currentY
+                    pv = getPixelValue(currentX, currentY, im)
+                    print pv
+                    sumA += (pv[0] * calculateKernel(rhoIndex, phiIndex, r, varphi))
+                    print "Sum as of now is: %f" % (sumA)
+                    phiIndex += 0.001
+                rhoIndex += 0.001
 
             # print "Radius of %d, %d is %f" % (x, y, r)
             # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
@@ -84,10 +94,12 @@ def processImage(im, newImg) :
             # print im.getpixel((r,varphi))
     print "Origin: %d, %d" % (x0, y0)
 
+
 def calculatePixelOffset(x, y, q, x0, y0):
     if q == 0:
         return [x, y]
     return [x - x0, y0 - y]
+
 
 def polToCar(radius, varphi):
     # print "varphi in degrees: %f" % varphi
@@ -106,11 +118,14 @@ def polToCar(radius, varphi):
 
     return [int(x),int(y)]
 
+
 def getPixelValue(x, y, img):
     print x, y
-    if(x >= 132 or y >= 133):
-        return 0,0,0,255
-    print img.getpixel((x, y))
+    try:
+        return img.getpixel((x, y))
+    except IndexError:
+        return (0,0,0, 255)
+    print 
 
 
 def findQuadrant(x, y, x0, y0):
@@ -133,6 +148,7 @@ def findQuadrant(x, y, x0, y0):
 def findRadius(xl, yl):
     r = np.sqrt((xl*xl) + (yl*yl))
     return r
+
 
 def calculateDegrees(xl, yl, q):
     # print "Quadrant %d" % q
@@ -168,6 +184,7 @@ def calculateDegrees(xl, yl, q):
     # print degrees
     return degrees
 
+
 def calculateKernel(rho, phi, r, varphi):
     # print "**************"
     # print "Actual Pixels"
@@ -185,6 +202,7 @@ def calculateKernel(rho, phi, r, varphi):
     return np.exp((-1) * expParam)
     # print "**************"
 
+
 def normalize(coeffecients):
     coeffecients.sort()
     denominator = coeffecients[len(coeffecients)-1] - coeffecients[0] #maxValue - minValue
@@ -194,11 +212,13 @@ def normalize(coeffecients):
     print coeffecients
     return
 
+
 def copyImage(o_img):
-    newImg = Image.new(o_img.mode, o_img.size)
+    return Image.new(o_img.mode, o_img.size)
+
 
 # initialize()
-o_img = readImage()
+o_img = read_image()
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
 c_img = copyImage(o_img)
