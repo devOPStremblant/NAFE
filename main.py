@@ -34,7 +34,7 @@ def iterateThroughImagePixels(im):
     w, h = im.size
     for x in range(0, w):
         for y in range(0, h):
-            print im.getPixelValue(w, h)
+            print im.get_pixel_value(w, h)
 
 
 def processImage(im, newImg) :
@@ -42,25 +42,22 @@ def processImage(im, newImg) :
     x0 = int(w / 2)
     y0 = int(h / 2)
     print x0, y0
+    pixels_with_values = []
+    dummy = 0
     for x in range (0, w):
         for y in range (0, h):
             # print "starting loop for %d, %d" % (x, y)
             
-            q = findQuadrant(x, y,x0, y0)
+            q = findQuadrant(x, y, x0, y0)
 
             xl, yl = calculatePixelOffset(x, y, q, x0, y0)
 
             r = findRadius(xl, yl)
-            varphi = calculateDegrees(xl,yl, q)
+            varphi = calculateDegrees(xl, yl, q)
 
-            carX, carY = polToCar(r, varphi)
-            carX += x0
-            carY = y0-carY
-
-            
-            # if q == 4:
-            # print "Pixel (%d, %d) in %d quadrant is (%d, %d) faraway with polar coordinates (%f, %f) and car coordinates (%d, %d)" % (x, y,q, xl, yl, r, varphi, carX, carY)
-            # print "Pixel (%d, %d) polar coordinates (%f, %f) gives back (%d, %d)" % (x, y, r, varphi, carX, carY)
+            # carX, carY = polToCar(r, varphi)
+            # carX += x0
+            # carY = y0-carY
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
@@ -78,26 +75,36 @@ def processImage(im, newImg) :
 
             while rhoIndex < upperRho:
                 while phiIndex < upperPhi:
-                    print "Current Rho is %f and Current Phi is %f " % (rhoIndex, phiIndex)
-                    currentX, currentY = polToCar(r + rhoIndex, phiIndex + varphi)
-                    currentX += x0
-                    currentY = y0 - currentY
-                    pv = getPixelValue(currentX, currentY, im)
-                    print pv
-                    kernalValue = calculateKernel(rhoIndex, phiIndex, r, varphi)
-                    sumA += (pv[0] * kernalValue)
-                    sumB += kernalValue
-                    phiIndex += 0.001
-                rhoIndex += 0.001
+                    # print "Current Rho is %f and Current Phi is %f " % (rhoIndex, phiIndex)
+                    c_x, c_y = polToCar(r + rhoIndex, phiIndex + varphi)
+                    c_x += x0
+                    c_y = y0 - c_y
+                    pv = get_pixel_value(c_x, c_y, im)
+                    # print pv
+                    kernel_value = calculateKernel(rhoIndex, phiIndex, r, varphi)
+                    sumA += (pv[0] * kernel_value)
+                    sumB += kernel_value
+                    phiIndex += 0.01
+                rhoIndex += 0.01
 
-            newPixelValue = sumA / sumB
-            [fx,fy] = polToCar(r, varphi)
-            newImg.putpixel((fx,fy), newPixelValue)
+            if sumB == 0:
+                new_pixel_value = 0
+            else:
+                new_pixel_value = int(sumA / sumB)
+
+            if new_pixel_value > 0:
+                print x, y
+            newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
             # print "Radius of %d, %d is %f" % (x, y, r)
             # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
             # get Pixel
             # print im.getpixel((r,varphi))
-    print "Origin: %d, %d" % (x0, y0)
+    newImg.save('output.png')
+    newImg.show()
+
+
+def reverse_offset(x, y, x0, y0):
+    return x+x0, y0-y
 
 
 def calculatePixelOffset(x, y, q, x0, y0):
@@ -111,12 +118,12 @@ def polToCar(radius, varphi):
     x_coordinate = radius * math.cos(np.deg2rad(varphi))
     y_coordinate = radius * math.sin(np.deg2rad(varphi))
 
-    if(x_coordinate < 0):
+    if x_coordinate < 0:
         x = math.ceil(x_coordinate)
     else:
         x = math.floor(x_coordinate)
 
-    if(y_coordinate < 0):
+    if y_coordinate < 0:
         y = math.ceil(y_coordinate)
     else:
         y = math.floor(y_coordinate)
@@ -124,8 +131,8 @@ def polToCar(radius, varphi):
     return [int(x),int(y)]
 
 
-def getPixelValue(x, y, img):
-    print x, y
+def get_pixel_value(x, y, img):
+    # print x, y
     try:
         return img.getpixel((x, y))
     except IndexError:
