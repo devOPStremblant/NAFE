@@ -12,7 +12,7 @@ sd = 2
 coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
-
+f = open('radius.txt','w')
 
 def initialize():
     imgHelper = ImageHelper()
@@ -43,7 +43,7 @@ def processImage(im, newImg) :
     y0 = int(h / 2)
     print x0, y0
     pixels_with_values = []
-    dummy = 0
+    pixel_count = 0
     for x in range (0, w):
         for y in range (0, h):
             # print "starting loop for %d, %d" % (x, y)
@@ -54,10 +54,13 @@ def processImage(im, newImg) :
 
             r = findRadius(xl, yl)
             varphi = calculateDegrees(xl, yl, q)
+            
 
-            # carX, carY = polToCar(r, varphi)
-            # carX += x0
-            # carY = y0-carY
+            carX, carY = polToCar(r, varphi)
+            carX += x0
+            carY = y0-carY
+
+            f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, carX, carY))
 
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
@@ -84,23 +87,25 @@ def processImage(im, newImg) :
                     kernel_value = calculateKernel(rhoIndex, phiIndex, r, varphi)
                     sumA += (pv[0] * kernel_value)
                     sumB += kernel_value
-                    phiIndex += 0.01
-                rhoIndex += 0.01
+                    phiIndex += 0.1
+                rhoIndex += 0.1
 
             if sumB == 0:
                 new_pixel_value = 0
             else:
-                new_pixel_value = int(sumA / sumB)
+                new_pixel_value = get_pixel_value(x, y, im)[0] - int(sumA / sumB)
 
-            if new_pixel_value > 0:
-                print x, y
+            # if new_pixel_value > 0:
+                # print x, y
             newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
             # print "Radius of %d, %d is %f" % (x, y, r)
             # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
             # get Pixel
             # print im.getpixel((r,varphi))
+            pixel_count += 1
+    print pixel_count
     newImg.save('output.png')
-    newImg.show()
+    # newImg.show()
 
 
 def reverse_offset(x, y, x0, y0):
@@ -137,7 +142,6 @@ def get_pixel_value(x, y, img):
         return img.getpixel((x, y))
     except IndexError:
         return (0,0,0, 255)
-    print 
 
 
 def findQuadrant(x, y, x0, y0):
