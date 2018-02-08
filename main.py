@@ -8,7 +8,7 @@ import time
 import math
 
 
-sd = 2
+sd = 1
 coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
@@ -65,8 +65,8 @@ def processImage(im, newImg) :
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
 
-            lowerPhi = (varphi - ((2 * sd) / r))
-            upperPhi = (varphi + ((2 * sd) / r))
+            lowerPhi = varphi - ((2 * sd) / r)
+            upperPhi = varphi + ((2 * sd) / r)
 
             # print "LowerRho Value: %f" %  lowerRho
             # print "Upper Value: %f" % upperRho
@@ -90,7 +90,8 @@ def processImage(im, newImg) :
                     phiIndex += 0.1
                 rhoIndex += 0.1
 
-            if sumB == 0:
+            original_pixel_value = get_pixel_value(x, y, im)[0]
+            if sumB == 0 or original_pixel_value == 0:
                 new_pixel_value = 0
             else:
                 new_pixel_value = get_pixel_value(x, y, im)[0] - int(sumA / sumB)
