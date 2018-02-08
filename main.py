@@ -97,7 +97,13 @@ def processImage(im, newImg) :
 
             # if new_pixel_value > 0:
                 # print x, y
+            # if r < 40:    
             newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
+
+            # if int(r) % 2 == 0:
+            #     newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
+            # else:
+            #     newImg.putpixel((x, y), (0, 0, 255, 255))
             # print "Radius of %d, %d is %f" % (x, y, r)
             # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
             # get Pixel
@@ -123,17 +129,17 @@ def polToCar(radius, varphi):
     x_coordinate = radius * math.cos(np.deg2rad(varphi))
     y_coordinate = radius * math.sin(np.deg2rad(varphi))
 
-    if x_coordinate < 0:
-        x = math.ceil(x_coordinate)
-    else:
-        x = math.floor(x_coordinate)
+    # if y_coordinate < 0:
+    #     x = math.ceil(x_coordinate)
+    # else:
+    #     x = math.floor(x_coordinate)
 
-    if y_coordinate < 0:
-        y = math.ceil(y_coordinate)
-    else:
-        y = math.floor(y_coordinate)
+    # if x_coordinate < 0:
+    #     y = math.ceil(y_coordinate)
+    # else:
+    #     y = math.floor(y_coordinate)
 
-    return [int(x),int(y)]
+    return [int(x_coordinate),int(y_coordinate)]
 
 
 def get_pixel_value(x, y, img):
@@ -232,13 +238,33 @@ def normalize(coeffecients):
 def copyImage(o_img):
     return Image.new(o_img.mode, o_img.size)
 
+def write_img_test(im):
+    r = 100
+    deg = 360
+    out_of_bounds = 0
+    while r > 0:
+        while deg > 0:
+            try:
+                x, y = polToCar(r, deg)
+                print x, y
+                im.putpixel((x,y), (0,0,255,255))
+            except IndexError:
+                out_of_bounds += 1
+            deg = deg - 1
+        r = r - 1
+    print "Index Out Of Bounds: %d " % out_of_bounds
+    im.save('test.png')
+    im.show()
 
 # initialize()
 o_img = read_image()
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
 c_img = copyImage(o_img)
-processImage(o_img, c_img)
+
+# write_img_test(c_img)
+
+# processImage(o_img, c_img)
 # calculateDegrees(32, -19, 3)
 # calculateDegrees(22, 24,1)
 # calculateDegrees(0,0, 4)
