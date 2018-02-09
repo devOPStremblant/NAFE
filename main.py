@@ -110,7 +110,7 @@ def processImage(im, newImg) :
             # print im.getpixel((r,varphi))
             pixel_count += 1
     print pixel_count
-    newImg.save('output.png')
+    newImg.save('output%s.png' % time.time())
     # newImg.show()
 
 
@@ -139,7 +139,7 @@ def polToCar(radius, varphi):
     # else:
     #     y = math.floor(y_coordinate)
 
-    return [int(x_coordinate),int(y_coordinate)]
+    return [x_coordinate,y_coordinate]
 
 
 def get_pixel_value(x, y, img):
@@ -152,6 +152,10 @@ def get_pixel_value(x, y, img):
 
 def findQuadrant(x, y, x0, y0):
     # print x, y, x0, y0
+    
+    if x == x0 or y == y0:
+        return 'NoQuadrant'
+    
     if x > x0 and y > y0:
         # print "IV Quadrant"
         return 4
@@ -256,12 +260,41 @@ def write_img_test(im):
     im.save('test.png')
     im.show()
 
+def write_img_with_polar_car(img):
+    w, h = img.size
+    x0 = int(w / 2)
+    y0 = int(h / 2)
+    for x in range (0, w):
+        for y in range (0, h):
+            print "current pixel %d, %d" % (x, y)
+            q = findQuadrant(x, y, x0, y0)
+
+            xl, yl = calculatePixelOffset(x, y, q, x0, y0)
+
+            r = findRadius(xl, yl)
+            varphi = calculateDegrees(xl, yl, q)
+
+            # print "polar coordinate %s, %s" % (r, varphi)
+
+            carX, carY = polToCar(r, varphi)
+            # print "Pol2Car before adjusting %s, %s" % (round(carX), round(carY))
+            carX += x0
+            carY = y0-carY
+            print "recalculated pixel %s, %s" % (int(round(carX)), int(round(carY))) 
+            # if carX == 0:
+            img.putpixel((int(round(carX)), int(round(carY))), (255, 255, 0, 255))
+            print "------------------------------------"
+    img.save('test%s.png' % time.time())
+    # img.show()
+
+
 # initialize()
 o_img = read_image()
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
 c_img = copyImage(o_img)
 
+write_img_with_polar_car(c_img)
 # write_img_test(c_img)
 
 # processImage(o_img, c_img)
