@@ -12,7 +12,7 @@ sd = 1
 coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
-
+# f = open('adjustedRadius.txt')
 
 def initialize():
     imgHelper = ImageHelper()
@@ -50,7 +50,7 @@ def processImage(im, newImg) :
             
             q = findQuadrant(x, y, x0, y0)
 
-            xl, yl = calculatePixelOffset(x, y, q, x0, y0)
+            xl, yl = get_offset_from_center(x, y, q, x0, y0)
 
             r = findRadius(xl, yl)
             varphi = calculateDegrees(xl, yl, q)
@@ -80,6 +80,10 @@ def processImage(im, newImg) :
                     c_x += x0
                     c_y = y0 - c_y
                     pv = get_pixel_value(c_x, c_y, im)
+                    try:
+                        newImg.putpixel((c_x, c_y), (0, 0, 255, 255))
+                    except IndexError:
+                        print "Out of bounds"
                     # print pv
                     kernel_value = calculateKernel(rhoIndex, phiIndex, r, varphi)
                     sumA += (pv[0] * kernel_value)
@@ -93,9 +97,9 @@ def processImage(im, newImg) :
             else:
                 new_pixel_value = get_pixel_value(x, y, im)[0] - int(sumA / sumB)
 
-            if new_pixel_value > 0:
-                print x, y
-            newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
+            # if new_pixel_value > 0:
+            #     print x, y
+            # newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
             # print "Radius of %d, %d is %f" % (x, y, r)
             # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
             # get Pixel
@@ -108,7 +112,7 @@ def reverse_offset(x, y, x0, y0):
     return x+x0, y0-y
 
 
-def calculatePixelOffset(x, y, q, x0, y0):
+def get_offset_from_center(x, y, q, x0, y0):
     if q == 0:
         return [x, y]
     return [x - x0, y0 - y]
