@@ -54,7 +54,6 @@ def processImage(im, newImg) :
 
             r = findRadius(xl, yl)
             varphi = calculateDegrees(xl, yl, q)
-            
 
             carX, carY = polToCar(r, varphi)
             carX += x0
@@ -260,7 +259,7 @@ def write_img_test(im):
     im.save('test.png')
     im.show()
 
-def write_img_with_polar_car(img):
+def write_img_with_polar_car(img, o_img):
     w, h = img.size
     x0 = int(w / 2)
     y0 = int(h / 2)
@@ -280,7 +279,7 @@ def write_img_with_polar_car(img):
             # print "Pol2Car before adjusting %s, %s" % (round(carX), round(carY))
             carX += x0
             carY = y0-carY
-            print "recalculated pixel %s, %s" % (int(round(carX)), int(round(carY))) 
+            print "recalculated pixel %s, %s" % (int(round(carX)), int(round(carY)))
             # if carX == 0:
             img.putpixel((int(round(carX)), int(round(carY))), (255, 255, 0, 255))
             print "------------------------------------"
@@ -294,7 +293,7 @@ o_img = read_image()
 # iterateThroughImagePixels(o_img)
 c_img = copyImage(o_img)
 
-write_img_with_polar_car(c_img)
+write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
 # processImage(o_img, c_img)
