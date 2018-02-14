@@ -125,8 +125,8 @@ def calculatePixelOffset(x, y, q, x0, y0):
 
 def polToCar(radius, varphi):
     # print "varphi in degrees: %f" % varphi
-    x_coordinate = radius * math.cos(np.deg2rad(varphi))
-    y_coordinate = radius * math.sin(np.deg2rad(varphi))
+    x_coordinate = radius * math.cos(abs(varphi))
+    y_coordinate = radius * math.sin(abs(varphi))
 
     # if y_coordinate < 0:
     #     x = math.ceil(x_coordinate)
@@ -179,30 +179,36 @@ def calculateDegrees(xl, yl, q):
     # print "Quadrant %d" % q
     # print "(xl, yl) : %d, %d" % (xl, yl)
 
-    if(xl == 0 and yl == 0):
+    if xl == 0 and yl == 0:
         return 0
 
-    if(xl==0):
-        if(yl < 0):
-            return 270
+    if xl == 0 :
+        if yl < 0:
+            return 4.71239
         else:
-            return 90
-    if(yl==0):
-        if(xl > 0):
+            return 1.5708
+    if yl == 0:
+        if xl > 0:
             return 0
         else:
-            return 180
+            return 3.14159
     
-    if (xl == 0 or q == 0):
-        return np.rad2deg(np.arctan(0))
+    if xl == 0 or q == 0:
+        return np.arctan(0)
+
+    sign_factor = 1
+
+    if xl < 0 or yl < 0:
+        sign_factor = -1
+
 
     degrees = 0
     if(q == 1 or q == 4):
-        degrees = np.rad2deg(np.arctan(yl/xl))
+        degrees = np.rad2deg(np.arctan(abs(xl) / abs(yl))) + ((q-1) * 90)
     elif (q == 2):
-        degrees = np.rad2deg(np.arctan(abs(xl)/abs(yl))) + 90
+        degrees = sign_factor * np.rad2deg(np.arctan(abs(xl) / abs(yl))) + 90
     else:
-        degrees = np.rad2deg(np.arctan(abs(yl)/abs(xl))) + ((q-1)*90)
+        degrees = np.rad2deg(np.arctan(abs(xl) / abs(yl))) + ((q-1) * 90)
     # print q*90
     # print yl/xl
     # print np.arctan(yl/xl)
@@ -287,13 +293,33 @@ def write_img_with_polar_car(img, o_img):
     # img.show()
 
 
+def testThisPixel(x, y, img):
+    q = findQuadrant(x, y, 66, 66)
+    xl, yl = calculatePixelOffset(x, y, q, 66, 66)
+    print "Pixel value %s: " % (get_pixel_value(xl, yl, img),)
+    radius = findRadius(xl, yl)
+    print "Radius %s: " %  radius
+    degrees = calculateDegrees(xl, yl, q)
+    print "Degrees %s: " %  degrees
+    radians = np.deg2rad(degrees)
+    x_new, y_new = polToCar(radius, radians)
+    print "Recalculated Cartesian: %s, %s" %  (x_new, y_new)
+    x_new += 66
+    y_new = 66 - y_new
+    print "Recalculated Cartesian: %s, %s" %  (x_new, y_new)
+
+
+
 # initialize()
 o_img = read_image()
+
+testThisPixel(20, 20, o_img)
+
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
-c_img = copyImage(o_img)
+# c_img = copyImage(o_img)
 
-write_img_with_polar_car(c_img, o_img)
+# write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
 # processImage(o_img, c_img)
