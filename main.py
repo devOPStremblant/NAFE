@@ -107,12 +107,16 @@ def processImage(im, newImg) :
     else:
         new_pixel_value = get_pixel_value(x_coordinate, y_coordinate, im)[0] - int(sumA / sumB)
 
+    print "Gaussian A: %s" % sumA
+    print "Gaussian B: %s" % sumB
+
+
     print "Filtered Pixel value (after subtracting): %s" % new_pixel_value
     # if new_pixel_value > 0:
         # print x, y
     # if r < 40:    
     newImg.putpixel((x_coordinate, y_coordinate), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
-    print "Pixel Value read again for verification: %s" % newImg.getpixel((x_coordinate, y_coordinate))
+    print "Pixel Value read again for verification: %s" % (newImg.getpixel((x_coordinate, y_coordinate)),)
 
     # if int(r) % 2 == 0:
     #     newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
