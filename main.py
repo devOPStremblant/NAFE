@@ -6,7 +6,11 @@ import numpy as np
 from PIL import Image
 import time
 import math
+import sys
 
+
+x_coordinate = int(sys.argv[1])
+y_coordinate = int(sys.argv[2])
 
 sd = 2
 coeffecients = []
@@ -44,70 +48,82 @@ def processImage(im, newImg) :
     print x0, y0
     pixels_with_values = []
     pixel_count = 0
-    for x in range (0, w):
-        for y in range (0, h):
-            # print "starting loop for %d, %d" % (x, y)
-            
-            q = findQuadrant(x, y, x0, y0)
 
-            xl, yl = calculatePixelOffset(x, y, q, x0, y0)
+    q = findQuadrant(x_coordinate, y_coordinate, x0, y0)
+    print "Quadrant: %s" % q
 
-            r = findRadius(xl, yl)
-            varphi = calculateDegrees(xl, yl, q)
+    x_offset, y_offset = calculatePixelOffset(x_coordinate, y_coordinate, q, x0, y0)
+    print "Offset from Center of Sun: %s, %s" % (x_offset, y_offset)
 
-            carX, carY = polToCar(r, varphi)
-            carX += x0
-            carY = y0-carY
+    
+    r = findRadius(x_offset, y_offset)
+    varphi = calculateDegrees(x_offset, y_offset, q)
+    print "Polar Coordinates: (radius, theta) is (%s, %s)" % (r, varphi)
 
-            f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, carX, carY))
+    carX, carY = polToCar(r, varphi)
+    carX += x0
+    carY = y0-carY
+    print "Cartesian coordinates (x, y): (%s, %s)" % (carX, carY)
 
-            lowerRho = r - 2*sd
-            upperRho = r + 2*sd
+    # f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, carX, carY))
 
-            lowerPhi = (varphi - ((2 * sd) / r))
-            upperPhi = (varphi + ((2 * sd) / r))
+    lowerRho = r - 2*sd
+    upperRho = r + 2*sd
+    print "Rho Range: %s, %s" % (lowerRho, upperRho)
 
-            # print "LowerRho Value: %f" %  lowerRho
-            # print "Upper Value: %f" % upperRho
+    lowerPhi = (varphi - ((2 * sd) / r))
+    upperPhi = (varphi + ((2 * sd) / r))
+    print "Phi Range: %s, %s" % (lowerPhi, upperPhi)
 
-            sumA = 0
-            sumB = 0
-            rhoIndex = lowerRho
-            phiIndex = lowerPhi
+    # print "LowerRho Value: %f" %  lowerRho
+    # print "Upper Value: %f" % upperRho
 
-            while rhoIndex < upperRho:
-                while phiIndex < upperPhi:
-                    # print "Current Rho is %f and Current Phi is %f " % (rhoIndex, phiIndex)
-                    c_x, c_y = polToCar(r + rhoIndex, phiIndex + varphi)
-                    c_x += x0
-                    c_y = y0 - c_y
-                    pv = get_pixel_value(c_x, c_y, im)
-                    # print pv
-                    kernel_value = calculateKernel(rhoIndex, phiIndex, r, varphi)
-                    sumA += (pv[0] * kernel_value)
-                    sumB += kernel_value
-                    phiIndex += 0.1
-                rhoIndex += 0.1
+    sumA = 0
+    sumB = 0
+    rhoIndex = lowerRho
+    phiIndex = lowerPhi
 
-            if sumB == 0:
-                new_pixel_value = 0
-            else:
-                new_pixel_value = get_pixel_value(x, y, im)[0] - int(sumA / sumB)
+    while rhoIndex < upperRho:
+        while phiIndex < upperPhi:
+            # print "Current Rho is %f and Current Phi is %f " % (rhoIndex, phiIndex)
+            print "Current Rho and Phi Indices: %s, %s" % (rhoIndex, phiIndex)
+            print "Polar Coordinates of the f function: %s, %s" % (r + rhoIndex, phiIndex + varphi)
+            c_x, c_y = polToCar(r + rhoIndex, phiIndex + varphi)
+            c_x += x0
+            c_y = y0 - c_y
+            print "Cartesian Coordinate for the above pixels (%s, %s)" % (c_x, c_y)
+            pv = get_pixel_value(c_x, c_y, im)
+            print "Pixel value at the above coordinate is %s" % (pv,)
+            # print pv
+            kernel_value = calculateKernel(rhoIndex, phiIndex, r, varphi)
+            print "Kernel value (C function) for the current combination is: %s" % kernel_value 
+            sumA += (pv[0] * kernel_value)
+            sumB += kernel_value
+            phiIndex += 0.1
+        rhoIndex += 0.1
 
-            # if new_pixel_value > 0:
-                # print x, y
-            # if r < 40:    
-            newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
+    if sumB == 0:
+        new_pixel_value = 0
+    else:
+        new_pixel_value = get_pixel_value(x_coordinate, y_coordinate, im)[0] - int(sumA / sumB)
 
-            # if int(r) % 2 == 0:
-            #     newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
-            # else:
-            #     newImg.putpixel((x, y), (0, 0, 255, 255))
-            # print "Radius of %d, %d is %f" % (x, y, r)
-            # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
-            # get Pixel
-            # print im.getpixel((r,varphi))
-            pixel_count += 1
+    print "Filtered Pixel value (after subtracting): %s" % new_pixel_value
+    # if new_pixel_value > 0:
+        # print x, y
+    # if r < 40:    
+    newImg.putpixel((x_coordinate, y_coordinate), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
+    print "Pixel Value read again for verification: %s" % newImg.getpixel((x_coordinate, y_coordinate))
+
+    # if int(r) % 2 == 0:
+    #     newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
+    # else:
+    #     newImg.putpixel((x, y), (0, 0, 255, 255))
+    # print "Radius of %d, %d is %f" % (x, y, r)
+    # print "Varphi of %d, %d is %f" % (x_offset, y_offset, varphi)
+    # get Pixel
+    # print im.getpixel((r,varphi))
+    pixel_count += 1
+
     print pixel_count
     newImg.save('output%s.png' % time.time())
     # newImg.show()
@@ -170,42 +186,42 @@ def findQuadrant(x, y, x0, y0):
     return 0
     
 
-def findRadius(xl, yl):
-    r = np.sqrt((xl*xl) + (yl*yl))
+def findRadius(x_offset, y_offset):
+    r = np.sqrt((x_offset*x_offset) + (y_offset*y_offset))
     return r
 
 
-def calculateDegrees(xl, yl, q):
+def calculateDegrees(x_offset, y_offset, q):
     # print "Quadrant %d" % q
-    # print "(xl, yl) : %d, %d" % (xl, yl)
+    # print "(x_offset, y_offset) : %d, %d" % (x_offset, y_offset)
 
-    if(xl == 0 and yl == 0):
+    if(x_offset == 0 and y_offset == 0):
         return 0
 
-    if(xl==0):
-        if(yl < 0):
+    if(x_offset==0):
+        if(y_offset < 0):
             return 270
         else:
             return 90
-    if(yl==0):
-        if(xl > 0):
+    if(y_offset==0):
+        if(x_offset > 0):
             return 0
         else:
             return 180
     
-    if (xl == 0 or q == 0):
+    if (x_offset == 0 or q == 0):
         return np.rad2deg(np.arctan(0))
 
     degrees = 0
     if(q == 1 or q == 4):
-        degrees = np.rad2deg(np.arctan(yl/xl))
+        degrees = np.rad2deg(np.arctan(y_offset/x_offset))
     elif (q == 2):
-        degrees = np.rad2deg(np.arctan(abs(xl)/abs(yl))) + 90
+        degrees = np.rad2deg(np.arctan(abs(x_offset)/abs(y_offset))) + 90
     else:
-        degrees = np.rad2deg(np.arctan(abs(yl)/abs(xl))) + ((q-1)*90)
+        degrees = np.rad2deg(np.arctan(abs(y_offset)/abs(x_offset))) + ((q-1)*90)
     # print q*90
-    # print yl/xl
-    # print np.arctan(yl/xl)
+    # print y_offset/x_offset
+    # print np.arctan(y_offset/x_offset)
     # print degrees
     return degrees
 
@@ -268,10 +284,10 @@ def write_img_with_polar_car(img, o_img):
             print "current pixel %d, %d" % (x, y)
             q = findQuadrant(x, y, x0, y0)
 
-            xl, yl = calculatePixelOffset(x, y, q, x0, y0)
+            x_offset, y_offset = calculatePixelOffset(x, y, q, x0, y0)
 
-            r = findRadius(xl, yl)
-            varphi = calculateDegrees(xl, yl, q)
+            r = findRadius(x_offset, y_offset)
+            varphi = calculateDegrees(x_offset, y_offset, q)
 
             # print "polar coordinate %s, %s" % (r, varphi)
 
@@ -289,14 +305,16 @@ def write_img_with_polar_car(img, o_img):
 
 # initialize()
 o_img = read_image()
+# print x_coordinate, y_coordinate
+# print o_img.getpixel((x_coordinate, y_coordinate))
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
 c_img = copyImage(o_img)
 
-write_img_with_polar_car(c_img, o_img)
+# write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-# processImage(o_img, c_img)
+processImage(o_img, c_img)
 # calculateDegrees(32, -19, 3)
 # calculateDegrees(22, 24,1)
 # calculateDegrees(0,0, 4)
