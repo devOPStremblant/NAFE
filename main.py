@@ -8,7 +8,7 @@ import time
 import math
 
 
-sd = 1
+sd = 64
 coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
@@ -44,6 +44,9 @@ def processImage(im, newImg) :
     print x0, y0
     pixels_with_values = []
     pixel_count = 0
+    min_value = 0.0039215
+    max_value = 1.0576288
+    difference = max_value - min_value
     for x in range (0, w):
         for y in range (0, h):
             # print "starting loop for %d, %d" % (x, y)
@@ -60,46 +63,73 @@ def processImage(im, newImg) :
             carX += x0
             carY = y0-carY
 
-            f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, carX, carY))
+            # f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (xl, yl, r, varphi, carX, carY))
+            # print '%s\t%s\t%s\t%s\t%s\t%s\n' % (xl, yl, r, varphi, carX, carY)
 
-            lowerRho = r - 2*sd
-            upperRho = r + 2*sd
+            lower_rho = r - 2*sd
+            upper_rho = r + 2*sd
 
-            lowerPhi = varphi - ((2 * sd) / r)
-            upperPhi = varphi + ((2 * sd) / r)
+            if r == 0:
+                lower_phi = varphi
+                upper_phi = varphi
+            else:
+                lower_phi = varphi - ((2 * sd) / r)
+                upper_phi = varphi + ((2 * sd) / r)
 
             # print "LowerRho Value: %f" %  lowerRho
             # print "Upper Value: %f" % upperRho
 
-            sumA = 0
-            sumB = 0
-            rhoIndex = lowerRho
-            phiIndex = lowerPhi
+            sum_a = 0
+            sum_b = 0
+            rho_index = lower_rho
+            phi_index = lower_phi
 
-            while rhoIndex < upperRho:
-                while phiIndex < upperPhi:
+            while rho_index < upper_rho:
+                while phi_index < upper_phi:
                     # print "Current Rho is %f and Current Phi is %f " % (rhoIndex, phiIndex)
-                    c_x, c_y = polToCar(r + rhoIndex, phiIndex + varphi)
+
+                    c_x, c_y = polToCar(r + rho_index, phi_index + varphi)
                     c_x += x0
                     c_y = y0 - c_y
+
+                    f.write('%s\t%s\t%s\t%s\n' % (int(round(c_x)), int(round(c_y)), (r + rho_index), (phi_index + varphi)))
                     pv = get_pixel_value(c_x, c_y, im)
+                    # This line has to go away
+                    try:
+                        newImg.putpixel((int(round(c_x)), int(round(c_y))), pv)
+                    except IndexError:
+                        print "do nothing"
+
                     # print pv
-                    kernel_value = calculateKernel(rhoIndex, phiIndex, r, varphi)
-                    sumA += (pv[0] * kernel_value)
-                    sumB += kernel_value
-                    phiIndex += 0.1
-                rhoIndex += 0.1
+                    kernel_value = calculateKernel(rho_index, phi_index, r, varphi)
+                    sum_a += (pv[0] * kernel_value)
+                    sum_b += kernel_value
+                    phi_index += 0.1
+                rho_index += 0.1
+
+            print sum_a, sum_b
+            quotient = 0
+            if sum_b > 0:
+                quotient = sum_a / sum_b
+
+            to_subtract = 100 * ((quotient - min_value) / difference)
 
             original_pixel_value = get_pixel_value(x, y, im)[0]
-            if sumB == 0 or original_pixel_value == 0:
-                new_pixel_value = 0
-            else:
-                new_pixel_value = get_pixel_value(x, y, im)[0] - int(sumA / sumB)
+
+            # print to_subtract
+            # print("%s" % (int(round(to_subtract))))
+
+            # f.write('%s\t%s\t%s\t%s\n' % (x,y,sum_a, sum_b))
+            # if round(sum_b) == 0 or original_pixel_value == 0:
+            #     new_pixel_value = 0
+            # else:
+            new_pixel_value = original_pixel_value - int(round(to_subtract))
+            # new_pixel_value = get_pixel_value(x, y, im)[0] - int(sum_a / sum_b)
 
             # if new_pixel_value > 0:
                 # print x, y
             # if r < 40:    
-            newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
+            # newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
 
             # if int(r) % 2 == 0:
             #     newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
@@ -127,8 +157,8 @@ def calculatePixelOffset(x, y, q, x0, y0):
 
 def polToCar(radius, varphi):
     # print "varphi in degrees: %f" % varphi
-    x_coordinate = radius * math.cos(np.deg2rad(varphi))
-    y_coordinate = radius * math.sin(np.deg2rad(varphi))
+    x_coordinate = radius * np.cos(np.deg2rad(varphi))
+    y_coordinate = radius * np.sin(np.deg2rad(varphi))
 
     # if y_coordinate < 0:
     #     x = math.ceil(x_coordinate)
@@ -240,8 +270,9 @@ def normalize(coeffecients):
     return
 
 
-def copyImage(o_img):
+def copy_image(o_img):
     return Image.new(o_img.mode, o_img.size)
+
 
 def write_img_test(im):
     r = 100
@@ -261,7 +292,8 @@ def write_img_test(im):
     im.save('test.png')
     im.show()
 
-def write_img_with_polar_car(img):
+
+def write_img_with_polar_car(img, o_img):
     w, h = img.size
     x0 = int(w / 2)
     y0 = int(h / 2)
@@ -281,9 +313,14 @@ def write_img_with_polar_car(img):
             # print "Pol2Car before adjusting %s, %s" % (round(carX), round(carY))
             carX += x0
             carY = y0-carY
-            print "recalculated pixel %s, %s" % (int(round(carX)), int(round(carY))) 
+            # print "recalculated pixel %s, %s" % (int(round(carX)), int(round(carY)))
+
+            p_x = int(round(carX))
+            p_y = int(round(carY))
+
+            pixel_value = get_pixel_value(p_x, p_y, o_img)
             # if carX == 0:
-            img.putpixel((int(round(carX)), int(round(carY))), (255, 255, 0, 255))
+            img.putpixel((p_x, p_y), pixel_value)
             print "------------------------------------"
     img.save('test%s.png' % time.time())
     # img.show()
@@ -293,12 +330,12 @@ def write_img_with_polar_car(img):
 o_img = read_image()
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
-c_img = copyImage(o_img)
+c_img = copy_image(o_img)
 
-write_img_with_polar_car(c_img)
+# write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-# processImage(o_img, c_img)
+processImage(o_img, c_img)
 # calculateDegrees(32, -19, 3)
 # calculateDegrees(22, 24,1)
 # calculateDegrees(0,0, 4)
