@@ -13,8 +13,8 @@ RADIANS_90 = 1.5708
 RADIANS_180 = 3.14159
 RADIANS_270 = 4.71239
 
-x_input = int(sys.argv[1])
-y_input = int(sys.argv[2])
+# x_input = int(sys.argv[1])
+# y_input = int(sys.argv[2])
 
 sd = 2
 coeffecients = []
@@ -72,8 +72,11 @@ def processImage(im, newImg) :
             lowerRho = r - 2*sd
             upperRho = r + 2*sd
 
-            lowerPhi = (varphi - ((2 * sd) / r))
-            upperPhi = (varphi + ((2 * sd) / r))
+            if r == 0:
+                lowerPhi = upperPhi = varphi
+            else:
+                lowerPhi = (varphi - ((2 * sd) / r))
+                upperPhi = (varphi + ((2 * sd) / r))
 
             # print "LowerRho Value: %f" %  lowerRho
             # print "Upper Value: %f" % upperRho
@@ -133,8 +136,8 @@ def calculatePixelOffset(x, y, q, x0, y0):
 
 def polToCar(radius, varphi):
     # print "varphi in degrees: %f" % varphi
-    x_coordinate = radius * math.cos(abs(varphi))
-    y_coordinate = radius * math.sin(abs(varphi))
+    x_coordinate = radius * np.cos(abs(varphi))
+    y_coordinate = radius * np.sin(abs(varphi))
 
     # if y_coordinate < 0:
     #     x = math.ceil(x_coordinate)
@@ -319,16 +322,16 @@ def testThisPixel(x, y, img):
 # initialize()
 o_img = read_image()
 
-testThisPixel(x_input,y_input, o_img)
+# testThisPixel(x_input,y_input, o_img)
 
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
-# c_img = copyImage(o_img)
+c_img = copyImage(o_img)
 
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-# processImage(o_img, c_img)
+processImage(o_img, c_img)
 # calculateDegrees(32, -19, 3)
 # calculateDegrees(22, 24,1)
 # calculateDegrees(0,0, 4)
