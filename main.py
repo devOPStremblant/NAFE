@@ -9,8 +9,11 @@ import math
 import sys
 
 
-x_coordinate = int(sys.argv[1])
-y_coordinate = int(sys.argv[2])
+# x_coordinate = int(sys.argv[1])
+# y_coordinate = int(sys.argv[2])
+
+x_coordinate = 20
+y_coordinate = 20
 
 sd = 2
 coeffecients = []
@@ -218,11 +221,11 @@ def calculateDegrees(x_offset, y_offset, q):
 
     degrees = 0
     if(q == 1 or q == 4):
-        degrees = np.rad2deg(np.arctan(y_offset/x_offset))
+        degrees = np.arctan(y_offset/x_offset)
     elif (q == 2):
-        degrees = np.rad2deg(np.arctan(abs(x_offset)/abs(y_offset))) + 90
+        degrees = np.deg2rad(np.rad2deg(np.arctan(abs(y_offset)/abs(x_offset)))+90)
     else:
-        degrees = np.rad2deg(np.arctan(abs(y_offset)/abs(x_offset))) + ((q-1)*90)
+        degrees = np.arctan(abs(y_offset)/abs(x_offset)) + ((q-1)*90)
     # print q*90
     # print y_offset/x_offset
     # print np.arctan(y_offset/x_offset)
