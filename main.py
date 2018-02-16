@@ -6,7 +6,15 @@ import numpy as np
 from PIL import Image
 import time
 import math
+import sys
 
+
+RADIANS_90 = 1.5708
+RADIANS_180 = 3.14159
+RADIANS_270 = 4.71239
+
+x_input = int(sys.argv[1])
+y_input = int(sys.argv[2])
 
 sd = 2
 coeffecients = []
@@ -184,35 +192,31 @@ def calculateDegrees(xl, yl, q):
 
     if xl == 0 :
         if yl < 0:
-            return 4.71239
+            return RADIANS_270
         else:
-            return 1.5708
+            return RADIANS_90
     if yl == 0:
         if xl > 0:
             return 0
         else:
-            return 3.14159
+            return RADIANS_180
     
     if xl == 0 or q == 0:
         return np.arctan(0)
 
     sign_factor = 1
-
-    if xl < 0 or yl < 0:
+    if (yl/xl) < 0:
         sign_factor = -1
 
-
-    degrees = 0
-    if(q == 1 or q == 4):
-        degrees = np.rad2deg(np.arctan(abs(xl) / abs(yl))) + ((q-1) * 90)
+    # degrees = sign_factor * (np.arctan(abs(yl) / abs(xl)) + ((q - 1) * RADIANS_90))
+    if(q == 1):
+        degrees = np.arctan(abs(yl) / abs(xl)) + ((q-1) * RADIANS_90)
     elif (q == 2):
-        degrees = sign_factor * np.rad2deg(np.arctan(abs(xl) / abs(yl))) + 90
+        degrees = sign_factor * (np.arctan(abs(xl) / abs(yl)) + RADIANS_90)
+    elif q == 4:
+        degrees = np.arctan(abs(xl) / abs(yl)) + ((q-1) * RADIANS_90)
     else:
-        degrees = np.rad2deg(np.arctan(abs(xl) / abs(yl))) + ((q-1) * 90)
-    # print q*90
-    # print yl/xl
-    # print np.arctan(yl/xl)
-    # print degrees
+        degrees = np.arctan(abs(yl) / abs(xl)) + ((q-1) * RADIANS_90)
     return degrees
 
 
@@ -294,26 +298,28 @@ def write_img_with_polar_car(img, o_img):
 
 
 def testThisPixel(x, y, img):
+    print "Input Pixels (%s, %s)" % (x, y)
     q = findQuadrant(x, y, 66, 66)
+    print "Quadrant %s" % q
     xl, yl = calculatePixelOffset(x, y, q, 66, 66)
+    print "Pixel Offset: (%s, %s)" % (xl, yl)
     print "Pixel value %s: " % (get_pixel_value(xl, yl, img),)
     radius = findRadius(xl, yl)
     print "Radius %s: " %  radius
-    degrees = calculateDegrees(xl, yl, q)
-    print "Degrees %s: " %  degrees
-    radians = np.deg2rad(degrees)
+    radians = calculateDegrees(xl, yl, q)
+    print "Radians %s: " %  radians
     x_new, y_new = polToCar(radius, radians)
     print "Recalculated Cartesian: %s, %s" %  (x_new, y_new)
     x_new += 66
     y_new = 66 - y_new
-    print "Recalculated Cartesian: %s, %s" %  (x_new, y_new)
+    print "Recalculated Cartesian: %s, %s" %  (int(round(x_new)), int(round(y_new)))
 
 
 
 # initialize()
 o_img = read_image()
 
-testThisPixel(20, 20, o_img)
+testThisPixel(x_input,y_input, o_img)
 
 # displayImageDimensions(o_img)
 # iterateThroughImagePixels(o_img)
