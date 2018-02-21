@@ -16,7 +16,7 @@ RADIANS_270 = 4.71239
 # x_input = int(sys.argv[1])
 # y_input = int(sys.argv[2])
 
-sd = 2
+sd = 1
 coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
@@ -31,21 +31,21 @@ def read_image():
     return Image.open('sample.png')
 
 
-def displayImageDimensions(im):
+def display_image_dimensions(im):
     w, h = im.size
     print w
     print h
     # im.show()
 
 
-def iterateThroughImagePixels(im):
+def iterate_through_image_pixels(im):
     w, h = im.size
     for x in range(0, w):
         for y in range(0, h):
             print im.get_pixel_value(w, h)
 
 
-def processImage(im, newImg) :
+def process_image(im, newImg) :
     w, h = im.size
     x0 = int(w / 2)
     y0 = int(h / 2)
@@ -56,12 +56,12 @@ def processImage(im, newImg) :
         for y in range (0, h):
             # print "starting loop for %d, %d" % (x, y)
             
-            q = findQuadrant(x, y, x0, y0)
+            q = find_quadrant(x, y, x0, y0)
 
-            xl, yl = calculatePixelOffset(x, y, q, x0, y0)
+            xl, yl = calculate_pixel_offset(x, y, q, x0, y0)
 
-            r = findRadius(xl, yl)
-            varphi = calculateDegrees(xl, yl, q)
+            r = find_radius(xl, yl)
+            varphi = calculate_degrees(xl, yl, q)
 
             carX, carY = polToCar(r, varphi)
             carX += x0
@@ -94,7 +94,7 @@ def processImage(im, newImg) :
                     c_y = y0 - c_y
                     pv = get_pixel_value(c_x, c_y, im)
                     # print pv
-                    kernel_value = calculateKernel(rhoIndex, phiIndex, r, varphi)
+                    kernel_value = calculate_kernel(rhoIndex, phiIndex, r, varphi)
                     sumA += (pv[0] * kernel_value)
                     sumB += kernel_value
                     phiIndex += 0.1
@@ -128,7 +128,7 @@ def reverse_offset(x, y, x0, y0):
     return x+x0, y0-y
 
 
-def calculatePixelOffset(x, y, q, x0, y0):
+def calculate_pixel_offset(x, y, q, x0, y0):
     if q == 0:
         return [x, y]
     return [x - x0, y0 - y]
@@ -160,7 +160,7 @@ def get_pixel_value(x, y, img):
         return (0,0,0, 255)
 
 
-def findQuadrant(x, y, x0, y0):
+def find_quadrant(x, y, x0, y0):
     # print x, y, x0, y0
     
     if x == x0 or y == y0:
@@ -181,12 +181,12 @@ def findQuadrant(x, y, x0, y0):
     return 0
     
 
-def findRadius(xl, yl):
+def find_radius(xl, yl):
     r = np.sqrt((xl*xl) + (yl*yl))
     return r
 
 
-def calculateDegrees(xl, yl, q):
+def calculate_degrees(xl, yl, q):
     # print "Quadrant %d" % q
     # print "(xl, yl) : %d, %d" % (xl, yl)
 
@@ -212,9 +212,9 @@ def calculateDegrees(xl, yl, q):
         sign_factor = -1
 
     # degrees = sign_factor * (np.arctan(abs(yl) / abs(xl)) + ((q - 1) * RADIANS_90))
-    if(q == 1):
+    if q == 1:
         degrees = np.arctan(abs(yl) / abs(xl)) + ((q-1) * RADIANS_90)
-    elif (q == 2):
+    elif q == 2:
         degrees = sign_factor * (np.arctan(abs(xl) / abs(yl)) + RADIANS_90)
     elif q == 4:
         degrees = np.arctan(abs(xl) / abs(yl)) + ((q-1) * RADIANS_90)
@@ -223,7 +223,7 @@ def calculateDegrees(xl, yl, q):
     return degrees
 
 
-def calculateKernel(rho, phi, r, varphi):
+def calculate_kernel(rho, phi, r, varphi):
     # print "**************"
     # print "Actual Pixels"
     # print "rho %d" % (rho)
@@ -235,9 +235,9 @@ def calculateKernel(rho, phi, r, varphi):
     # print "the other part whole sq %d" % (np.square(r * (varphi - phi)))
     numerator = np.square(r - rho) + np.square(r * (varphi - phi))
     # print "Numerator %d" % numerator
-    expParam = numerator / 2 * np.square(sd)
+    exp_param = numerator / 2 * np.square(sd)
     # print "(%d, %d)" % (r, varphi)
-    return np.exp((-1) * expParam)
+    return np.exp((-1) * exp_param)
     # print "**************"
 
 
@@ -251,8 +251,9 @@ def normalize(coeffecients):
     return
 
 
-def copyImage(o_img):
+def copy_image(o_img):
     return Image.new(o_img.mode, o_img.size)
+
 
 def write_img_test(im):
     r = 100
@@ -272,6 +273,7 @@ def write_img_test(im):
     im.save('test.png')
     im.show()
 
+
 def write_img_with_polar_car(img, o_img):
     w, h = img.size
     x0 = int(w / 2)
@@ -279,12 +281,12 @@ def write_img_with_polar_car(img, o_img):
     for x in range (0, w):
         for y in range (0, h):
             print "current pixel %d, %d" % (x, y)
-            q = findQuadrant(x, y, x0, y0)
+            q = find_quadrant(x, y, x0, y0)
 
-            xl, yl = calculatePixelOffset(x, y, q, x0, y0)
+            xl, yl = calculate_pixel_offset(x, y, q, x0, y0)
 
-            r = findRadius(xl, yl)
-            varphi = calculateDegrees(xl, yl, q)
+            r = find_radius(xl, yl)
+            varphi = calculate_degrees(xl, yl, q)
 
             # print "polar coordinate %s, %s" % (r, varphi)
 
@@ -300,16 +302,16 @@ def write_img_with_polar_car(img, o_img):
     # img.show()
 
 
-def testThisPixel(x, y, img):
+def test_this_pixel(x, y, img):
     print "Input Pixels (%s, %s)" % (x, y)
-    q = findQuadrant(x, y, 66, 66)
+    q = find_quadrant(x, y, 66, 66)
     print "Quadrant %s" % q
-    xl, yl = calculatePixelOffset(x, y, q, 66, 66)
+    xl, yl = calculate_pixel_offset(x, y, q, 66, 66)
     print "Pixel Offset: (%s, %s)" % (xl, yl)
     print "Pixel value %s: " % (get_pixel_value(xl, yl, img),)
-    radius = findRadius(xl, yl)
+    radius = find_radius(xl, yl)
     print "Radius %s: " %  radius
-    radians = calculateDegrees(xl, yl, q)
+    radians = calculate_degrees(xl, yl, q)
     print "Radians %s: " %  radians
     x_new, y_new = polToCar(radius, radians)
     print "Recalculated Cartesian: %s, %s" %  (x_new, y_new)
@@ -324,18 +326,18 @@ o_img = read_image()
 
 # testThisPixel(x_input,y_input, o_img)
 
-# displayImageDimensions(o_img)
-# iterateThroughImagePixels(o_img)
-c_img = copyImage(o_img)
+# display_image_dimensions(o_img)
+# iterate_through_image_pixels(o_img)
+c_img = copy_image(o_img)
 
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-processImage(o_img, c_img)
-# calculateDegrees(32, -19, 3)
-# calculateDegrees(22, 24,1)
-# calculateDegrees(0,0, 4)
-# calculateDegrees(-43,-21,2)
+process_image(o_img, c_img)
+# calculate_degrees(32, -19, 3)
+# calculate_degrees(22, 24,1)
+# calculate_degrees(0,0, 4)
+# calculate_degrees(-43,-21,2)
 
 # normalize(coeffecients)
 # plt.show()
