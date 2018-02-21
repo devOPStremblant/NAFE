@@ -45,83 +45,85 @@ def iterate_through_image_pixels(im):
             print im.get_pixel_value(w, h)
 
 
-def process_image(im, newImg) :
+def process_image(im, new_img):
     w, h = im.size
-    x0 = int(w / 2)
-    y0 = int(h / 2)
-    print x0, y0
-    pixels_with_values = []
-    pixel_count = 0
+    x_suncenter = int(w / 2)
+    y_suncenter = int(h / 2)
+    print x_suncenter, y_suncenter
+
+    filtered_pixel_value = (0, 0, 0, 255)
     for x in range (0, w):
         for y in range (0, h):
-            # print "starting loop for %d, %d" % (x, y)
-            
-            q = find_quadrant(x, y, x0, y0)
+            filtered_pixel_value = filter_pixel(x, y, im)
+            new_img.putpixel((x, y), (filtered_pixel_value, filtered_pixel_value, filtered_pixel_value, 255))
 
-            xl, yl = calculate_pixel_offset(x, y, q, x0, y0)
-
-            r = find_radius(xl, yl)
-            varphi = calculate_degrees(xl, yl, q)
-
-            carX, carY = polToCar(r, varphi)
-            carX += x0
-            carY = y0-carY
-
-            f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, carX, carY))
-
-            lowerRho = r - 2*sd
-            upperRho = r + 2*sd
-
-            if r == 0:
-                lowerPhi = upperPhi = varphi
-            else:
-                lowerPhi = (varphi - ((2 * sd) / r))
-                upperPhi = (varphi + ((2 * sd) / r))
-
-            # print "LowerRho Value: %f" %  lowerRho
-            # print "Upper Value: %f" % upperRho
-
-            sumA = 0
-            sumB = 0
-            rhoIndex = lowerRho
-            phiIndex = lowerPhi
-
-            while rhoIndex < upperRho:
-                while phiIndex < upperPhi:
-                    # print "Current Rho is %f and Current Phi is %f " % (rhoIndex, phiIndex)
-                    c_x, c_y = polToCar(r + rhoIndex, phiIndex + varphi)
-                    c_x += x0
-                    c_y = y0 - c_y
-                    pv = get_pixel_value(c_x, c_y, im)
-                    # print pv
-                    kernel_value = calculate_kernel(rhoIndex, phiIndex, r, varphi)
-                    sumA += (pv[0] * kernel_value)
-                    sumB += kernel_value
-                    phiIndex += 0.1
-                rhoIndex += 0.1
-
-            if sumB == 0:
-                new_pixel_value = 0
-            else:
-                new_pixel_value = get_pixel_value(x, y, im)[0] - int(sumA / sumB)
-
-            # if new_pixel_value > 0:
-                # print x, y
-            # if r < 40:    
-            newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
-
-            # if int(r) % 2 == 0:
-            #     newImg.putpixel((x, y), (new_pixel_value, new_pixel_value, new_pixel_value, 255))
-            # else:
-            #     newImg.putpixel((x, y), (0, 0, 255, 255))
-            # print "Radius of %d, %d is %f" % (x, y, r)
-            # print "Varphi of %d, %d is %f" % (xl, yl, varphi)
-            # get Pixel
-            # print im.getpixel((r,varphi))
-            pixel_count += 1
-    print pixel_count
-    newImg.save('output%s.png' % time.time())
+    new_img.save('output%s.png' % time.time())
     # newImg.show()
+
+
+def filter_pixel(x, y, im):
+    # print "starting loop for %d, %d" % (x, y)
+
+    x0 = 66
+    y0 = 66
+    q = find_quadrant(x, y, x0, y0)
+
+    xl, yl = calculate_pixel_offset(x, y, q, x0, y0)
+
+    r = find_radius(xl, yl)
+    varphi = calculate_degrees(xl, yl, q)
+
+    cartesian_x, cartesian_y = polToCar(r, varphi)
+    cartesian_x += x0
+    cartesian_y = y0 - cartesian_y
+
+    f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, cartesian_x, cartesian_y))
+
+    lower_rho = r - 2 * sd
+    upper_rho = r + 2 * sd
+
+    if r == 0:
+        lower_phi = upper_phi = varphi
+    else:
+        lower_phi = (varphi - ((2 * sd) / r))
+        upper_phi = (varphi + ((2 * sd) / r))
+
+    print "Rho Values range from %s to %s" % (lower_rho, upper_rho)
+    print "Phi values range from %s to %s" % (lower_phi, upper_phi)
+
+    sum_a = 0
+    sum_b = 0
+    rho_index = lower_rho
+    phi_index = lower_phi
+
+    while rho_index < upper_rho:
+        while phi_index < upper_phi:
+            print "Current Rho is %f and Current Phi is %f " % (rho_index, phi_index)
+            rho_param_for_f = r + rho_index
+            phi_param_for_f = phi_index + varphi
+            print "f() function is done on %s and %s values" % (rho_param_for_f, phi_param_for_f)
+
+            c_x, c_y = polToCar(rho_param_for_f, phi_param_for_f)
+            c_x += x0
+            c_y = y0 - c_y
+            pv = get_pixel_value(c_x, c_y, im)
+            print "f() function returns %s " % (pv,)
+
+            kernel_value = calculate_kernel(rho_index, phi_index, r, varphi)
+            print "C() function of %s and %s is %s" % (rho_index, phi_index, kernel_value)
+            sum_a += (pv[0] * kernel_value)
+            sum_b += kernel_value
+            phi_index += 0.01
+        rho_index += 0.01
+
+    print "Sum Gaussian A: %s" % sum_a
+    print "Sum Gaussian B: %s" % sum_b
+
+    if sum_b == 0:
+        new_pixel_value = 0
+    else:
+        new_pixel_value = get_pixel_value(x, y, im)[0] - int(sum_a / sum_b)
+    return new_pixel_value
 
 
 def reverse_offset(x, y, x0, y0):
@@ -320,20 +322,21 @@ def test_this_pixel(x, y, img):
     print "Recalculated Cartesian: %s, %s" %  (int(round(x_new)), int(round(y_new)))
 
 
-
 # initialize()
 o_img = read_image()
 
-# testThisPixel(x_input,y_input, o_img)
+# test_this_pixel(x_input,y_input, o_img)
 
 # display_image_dimensions(o_img)
 # iterate_through_image_pixels(o_img)
 c_img = copy_image(o_img)
 
+filter_pixel(20, 20, o_img)
+
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-process_image(o_img, c_img)
+# process_image(o_img, c_img)
 # calculate_degrees(32, -19, 3)
 # calculate_degrees(22, 24,1)
 # calculate_degrees(0,0, 4)
