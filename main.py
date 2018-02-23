@@ -7,7 +7,7 @@ from PIL import Image
 import time
 import math
 import sys
-
+from libtiff import *
 
 RADIANS_90 = 1.5708
 RADIANS_180 = 3.14159
@@ -28,7 +28,7 @@ def initialize():
 
 
 def read_image():
-    return Image.open('sample.png')
+    return Image.open('sample.tif')
 
 
 def display_image_dimensions(im):
@@ -63,7 +63,6 @@ def process_image(im, new_img):
 
 def filter_pixel(x, y, im):
     # print "starting loop for %d, %d" % (x, y)
-
     x0 = 66
     y0 = 66
     q = find_quadrant(x, y, x0, y0)
@@ -76,6 +75,7 @@ def filter_pixel(x, y, im):
     cartesian_x, cartesian_y = polToCar(r, varphi)
     cartesian_x += x0
     cartesian_y = y0 - cartesian_y
+    print "******** Normal Pixel Value ******** %s" % get_pixel_value(cartesian_x, cartesian_y, im)
 
     f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, cartesian_x, cartesian_y))
 
@@ -100,7 +100,7 @@ def filter_pixel(x, y, im):
         while phi_index < upper_phi:
             print "Current Rho is %f and Current Phi is %f " % (rho_index, phi_index)
             rho_param_for_f = r + rho_index
-            phi_param_for_f = phi_index + varphi
+            phi_param_for_f = angle_addition(phi_index, varphi)
             print "f() function is done on %s and %s values" % (rho_param_for_f, phi_param_for_f)
 
             c_x, c_y = polToCar(rho_param_for_f, phi_param_for_f)
@@ -113,8 +113,8 @@ def filter_pixel(x, y, im):
             print "C() function of %s and %s is %s" % (rho_index, phi_index, kernel_value)
             sum_a += (pv[0] * kernel_value)
             sum_b += kernel_value
-            phi_index += 0.01
-        rho_index += 0.01
+            phi_index += 0.00001
+        rho_index += 0.00001
 
     print "Sum Gaussian A: %s" % sum_a
     print "Sum Gaussian B: %s" % sum_b
@@ -124,6 +124,29 @@ def filter_pixel(x, y, im):
     else:
         new_pixel_value = get_pixel_value(x, y, im)[0] - int(sum_a / sum_b)
     return new_pixel_value
+
+
+def read_tiff_using_libtiff():
+    tiff = TIFF.open('filename')
+    image = tiff.read_image()
+    return image
+
+def readTIFF16():
+    """Read 16bits TIFF"""
+    im = Image.open('sample.tif')
+    out = np.fromstring(
+        im.tobytes(),
+        np.ushort
+        ).reshape(tuple(list(im.size)))
+    return out
+
+
+def angle_addition(a, b):
+    return np.arctan((a + b) / (1 - (a * b)))
+
+
+def angle_difference(a, b):
+    return np.arctan((a - b) / (1 + (a * b)))
 
 
 def reverse_offset(x, y, x0, y0):
@@ -331,7 +354,10 @@ o_img = read_image()
 # iterate_through_image_pixels(o_img)
 c_img = copy_image(o_img)
 
-filter_pixel(20, 20, o_img)
+# readTIFF16()
+
+read_tiff_using_libtiff()
+# filter_pixel(20, 20, o_img)
 
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
