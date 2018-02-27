@@ -52,17 +52,19 @@ def process_image(im, new_img):
     y_suncenter = int(h / 2)
     print x_suncenter, y_suncenter
 
+    img_array = read_tiff_using_tifffle()
+
     filtered_pixel_value = (0, 0, 0, 255)
     for x in range (0, w):
         for y in range (0, h):
-            filtered_pixel_value = filter_pixel(x, y, im)
+            filtered_pixel_value = filter_pixel(x, y, img_array)
             new_img.putpixel((x, y), (filtered_pixel_value, filtered_pixel_value, filtered_pixel_value, 255))
 
     new_img.save('output%s.png' % time.time())
     # newImg.show()
 
 
-def filter_pixel(x, y, im):
+def filter_pixel(x, y, img_array):
     # print "starting loop for %d, %d" % (x, y)
     x0 = 66
     y0 = 66
@@ -76,7 +78,7 @@ def filter_pixel(x, y, im):
     cartesian_x, cartesian_y = polToCar(r, varphi)
     cartesian_x += x0
     cartesian_y = y0 - cartesian_y
-    print "******** Normal Pixel Value ******** %s" % get_pixel_value(cartesian_x, cartesian_y, im)
+    print "******** Normal Pixel Value ******** %s" % get_16bit_pixel_value(int(round(cartesian_x)), int(round(cartesian_y)), img_array)
 
     f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, cartesian_x, cartesian_y))
 
@@ -107,15 +109,15 @@ def filter_pixel(x, y, im):
             c_x, c_y = polToCar(rho_param_for_f, phi_param_for_f)
             c_x += x0
             c_y = y0 - c_y
-            pv = get_pixel_value(c_x, c_y, im)
+            pv = get_16bit_pixel_value(int(round(c_x)), int(round(c_y)), img_array)
             print "f() function returns %s " % (pv,)
 
             kernel_value = calculate_kernel(rho_index, phi_index, r, varphi)
             print "C() function of %s and %s is %s" % (rho_index, phi_index, kernel_value)
             sum_a += (pv[0] * kernel_value)
             sum_b += kernel_value
-            phi_index += 0.00001
-        rho_index += 0.00001
+            phi_index += 1
+        rho_index += 1
 
     print "Sum Gaussian A: %s" % sum_a
     print "Sum Gaussian B: %s" % sum_b
@@ -123,7 +125,7 @@ def filter_pixel(x, y, im):
     if sum_b == 0:
         new_pixel_value = 0
     else:
-        new_pixel_value = get_pixel_value(x, y, im)[0] - int(sum_a / sum_b)
+        new_pixel_value = get_16bit_pixel_value(x, y, img_array)[0] - int(sum_a / sum_b)
     return new_pixel_value
 
 
@@ -177,6 +179,10 @@ def polToCar(radius, varphi):
 
     return [x_coordinate,y_coordinate]
 
+
+def get_16bit_pixel_value(x, y, img_array):
+    print "Looking up 16 Bit Pixel information for (%s, %s)" % (x, y)
+    return img_array[x][y]
 
 def get_pixel_value(x, y, img):
     # print x, y
@@ -327,7 +333,7 @@ def write_img_with_polar_car(img, o_img):
     img.save('test%s.png' % time.time())
     # img.show()
 
-def read_tiff_using_tifffle(img):
+def read_tiff_using_tifffle():
     with TiffFile('sample.tif', 'rb') as file:
         return file.asarray()
 
@@ -360,7 +366,7 @@ o_img = read_image()
 c_img = copy_image(o_img)
 
 # readTIFF16()
-read_tiff_using_tifffle(o_img)
+# read_tiff_using_tifffle()
 
 # read_tiff_using_libtiff()
 # filter_pixel(20, 20, o_img)
@@ -368,7 +374,7 @@ read_tiff_using_tifffle(o_img)
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-# process_image(o_img, c_img)
+process_image(o_img, c_img)
 # calculate_degrees(32, -19, 3)
 # calculate_degrees(22, 24,1)
 # calculate_degrees(0,0, 4)
