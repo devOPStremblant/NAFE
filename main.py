@@ -7,7 +7,8 @@ from PIL import Image
 import time
 import math
 import sys
-from libtiff import *
+# from libtiff import *
+from tifffile import TiffFile
 
 RADIANS_90 = 1.5708
 RADIANS_180 = 3.14159
@@ -326,6 +327,10 @@ def write_img_with_polar_car(img, o_img):
     img.save('test%s.png' % time.time())
     # img.show()
 
+def read_tiff_using_tifffle(img):
+    with TiffFile('sample.tif', 'rb') as file:
+        return file.asarray()
+
 
 def test_this_pixel(x, y, img):
     print "Input Pixels (%s, %s)" % (x, y)
@@ -355,8 +360,9 @@ o_img = read_image()
 c_img = copy_image(o_img)
 
 # readTIFF16()
+read_tiff_using_tifffle(o_img)
 
-read_tiff_using_libtiff()
+# read_tiff_using_libtiff()
 # filter_pixel(20, 20, o_img)
 
 # write_img_with_polar_car(c_img, o_img)
