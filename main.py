@@ -17,7 +17,7 @@ RADIANS_270 = 4.71239
 # x_input = int(sys.argv[1])
 # y_input = int(sys.argv[2])
 
-sd = 1
+sd = 3
 coeffecients = []
 runningTotal = 0
 x0 = y0 = 0
@@ -126,6 +126,69 @@ def filter_pixel(x, y, img_array):
         new_pixel_value = 0
     else:
         new_pixel_value = get_16bit_pixel_value(x, y, img_array)[0] - int(sum_a / sum_b)
+    return new_pixel_value
+
+
+def filter_pixel_new(x, y, img_array):
+    # print "starting loop for %d, %d" % (x, y)
+    x0 = 66
+    y0 = 66
+    q = find_quadrant(x, y, x0, y0)
+
+    xl, yl = calculate_pixel_offset(x, y, q, x0, y0)
+
+    r = find_radius(xl, yl)
+    varphi = calculate_degrees(xl, yl, q)
+
+    cartesian_x, cartesian_y = polToCar(r, varphi)
+    cartesian_x += x0
+    cartesian_y = y0 - cartesian_y
+    print "******** Normal Pixel Value ******** %s" % get_16bit_pixel_value(int(round(cartesian_x)), int(round(cartesian_y)), img_array)
+
+    f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, cartesian_x, cartesian_y))
+
+    lower_rho = r - 2 * sd
+    upper_rho = r + 2 * sd
+
+    if r == 0:
+        lower_phi = upper_phi = varphi
+    else:
+        lower_phi = (varphi - ((2 * sd) / r))
+        upper_phi = (varphi + ((2 * sd) / r))
+
+    print "Rho Values range from %s to %s" % (lower_rho, upper_rho)
+    print "Phi values range from %s to %s" % (lower_phi, upper_phi)
+
+    sum_a = 0
+    sum_b = 0
+    rho_index = lower_rho
+    phi_index = lower_phi
+
+    while rho_index < upper_rho:
+        while phi_index < upper_phi:
+            print "Current Rho is %f and Current Phi is %f " % (rho_index, phi_index)
+            print "f() function is done on %s and %s values" % (rho_index, phi_index)
+
+            c_x, c_y = polToCar(rho_index, phi_index)
+            c_x += x0
+            c_y = y0 - c_y
+            pv = get_16bit_pixel_value(int(round(c_x)), int(round(c_y)), img_array)
+            print "f() function returns %s " % (pv,)
+
+            kernel_value = calculate_kernel(rho_index, phi_index, r, varphi)
+            print "C() function of %s and %s is %s" % (rho_index, phi_index, kernel_value)
+            sum_a += (pv * kernel_value)
+            sum_b += kernel_value
+            phi_index += 1
+        rho_index += 1
+
+    print "Sum Gaussian A: %s" % sum_a
+    print "Sum Gaussian B: %s" % sum_b
+
+    if sum_b == 0:
+        new_pixel_value = 0
+    else:
+        new_pixel_value = get_16bit_pixel_value(x, y, img_array) - int(sum_a / sum_b)
     return new_pixel_value
 
 
@@ -369,12 +432,12 @@ c_img = copy_image(o_img)
 # read_tiff_using_tifffle()
 
 # read_tiff_using_libtiff()
-# filter_pixel(20, 20, o_img)
+filter_pixel_new(20, 20, read_tiff_using_tifffle())
 
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-process_image(o_img, c_img)
+# process_image(o_img, c_img)
 # calculate_degrees(32, -19, 3)
 # calculate_degrees(22, 24,1)
 # calculate_degrees(0,0, 4)
