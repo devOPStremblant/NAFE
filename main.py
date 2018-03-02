@@ -9,6 +9,7 @@ import math
 import sys
 # from libtiff import *
 from tifffile import TiffFile
+from tifffile import imsave
 
 RADIANS_90 = 1.5708
 RADIANS_180 = 3.14159
@@ -46,23 +47,24 @@ def iterate_through_image_pixels(im):
             print im.get_pixel_value(w, h)
 
 
-def process_image(im, new_img):
+def process_image(im):
+    img_array = read_tiff_using_tifffle()
+    w, h = img_array.shape
+    new_img = np.zeros(shape=(img_array.shape[0], img_array.shape[1]), dtype='uint16')
     
-    w, h = im.size
     x_suncenter = int(w / 2)
     y_suncenter = int(h / 2)
     print x_suncenter, y_suncenter
 
-    img_array = read_tiff_using_tifffle()
-    new_img = np.zeros(shape=(img_array.shape[0], img_array.shape[1]))
-
     filtered_pixel_value = (0, 0, 0, 255)
-    for x in range (0, w):
-        for y in range (0, h):
-            filtered_pixel_value = filter_pixel_new(x, y, img_array)
-            new_img[x][y]=filtered_pixel_value
+    for x in range (0, img_array.shape[0]):
+        for y in range (0, img_array.shape[1]):
+            # print "Working on (%s, %s)" % (x, y)
+            # filtered_pixel_value = filter_pixel_new(x, y, img_array)
+            # new_img[x][y]=filtered_pixel_value
+            new_img[x][y] = get_16bit_pixel_value(x, y, img_array)
 
-    new_img.save('output%s.png' % time.time())
+    imsave('test_output.tif', data=(new_img), shape=(img_array.shape))
     # newImg.show()
 
 
@@ -145,9 +147,9 @@ def filter_pixel_new(x, y, img_array):
     cartesian_x, cartesian_y = polToCar(r, varphi)
     cartesian_x += x0
     cartesian_y = y0 - cartesian_y
-    print "******** Normal Pixel Value ******** %s" % get_16bit_pixel_value(int(round(cartesian_x)), int(round(cartesian_y)), img_array)
+    # print "******** Normal Pixel Value ******** %s" % get_16bit_pixel_value(int(round(cartesian_x)), int(round(cartesian_y)), img_array)
 
-    f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, cartesian_x, cartesian_y))
+    # f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (x, y, r, varphi, cartesian_x, cartesian_y))
 
     lower_rho = r - 2 * sd
     upper_rho = r + 2 * sd
@@ -168,18 +170,18 @@ def filter_pixel_new(x, y, img_array):
 
     while rho_index < upper_rho:
         while phi_index < upper_phi:
-            print "Current Rho is %f and Current Phi is %f " % (rho_index, phi_index)
+            # print "Current Rho is %f and Current Phi is %f " % (rho_index, phi_index)
             neighbour_x, neighbour_y = polToCar(rho_index, phi_index)
             neighbour_x += x0
             neighbour_y = y0 - neighbour_y
             pv = get_16bit_pixel_value(int(round(neighbour_x)), int(round(neighbour_y)), img_array)
-            print "f() function returns %s " % pv
+            # print "f() function returns %s " % pv
             kernel_value = calculate_kernel(rho_index, phi_index, r, varphi)
-            print "C() function of %s and %s is %s" % (rho_index, phi_index, kernel_value)
+            # print "C() function of %s and %s is %s" % (rho_index, phi_index, kernel_value)
             sum_a += (pv * kernel_value)
             sum_b += kernel_value
-            phi_index += 0.01
-        rho_index += 0.01
+            phi_index += 0.1
+        rho_index += 0.1
 
     print "Sum Gaussian A: %s" % sum_a
     print "Sum Gaussian B: %s" % sum_b
@@ -243,7 +245,7 @@ def polToCar(radius, varphi):
 
 
 def get_16bit_pixel_value(x, y, img_array):
-    print "Looking up 16 Bit Pixel information for (%s, %s)" % (x, y)
+    # print "Looking up 16 Bit Pixel information for (%s, %s)" % (x, y)
     try:
         return img_array[x][y]
     except IndexError:
@@ -439,7 +441,7 @@ o_img = read_image()
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-process_image(o_img, c_img)
+process_image(o_img)
 # calculate_degrees(32, -19, 3)
 # calculate_degrees(22, 24,1)
 # calculate_degrees(0,0, 4)
