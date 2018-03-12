@@ -133,16 +133,25 @@ def filter_pixel(x, y, img_array):
     return new_pixel_value
 
 
+def carToPol(x,y, x_c, y_c):
+    q = find_quadrant(x, y, x_c, y_c)
+    xl, yl = calculate_pixel_offset(x, y, q, x_c, y_c)
+    r = find_radius(xl, yl)
+    varphi = calculate_degrees(xl, yl, q)
+    return r, varphi
+
 def filter_pixel_new(x, y, img_array):
     # print "starting loop for %d, %d" % (x, y)
     x0 = 66
     y0 = 66
-    q = find_quadrant(x, y, x0, y0)
+    # q = find_quadrant(x, y, x0, y0)
 
-    xl, yl = calculate_pixel_offset(x, y, q, x0, y0)
+    # xl, yl = calculate_pixel_offset(x, y, q, x0, y0)
 
-    r = find_radius(xl, yl)
-    varphi = calculate_degrees(xl, yl, q)
+    # r = find_radius(xl, yl)
+    # varphi = calculate_degrees(xl, yl, q)
+
+    r, varphi = carToPol(x, y, x0, y0)
 
     cartesian_x, cartesian_y = polToCar(r, varphi)
     cartesian_x += x0
