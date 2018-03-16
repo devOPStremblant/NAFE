@@ -47,7 +47,7 @@ def iterate_through_image_pixels(im):
             print im.get_pixel_value(w, h)
 
 
-def process_image(im):
+def process_image():
     img_array = read_tiff_using_tifffle()
     w, h = img_array.shape
     new_img = np.zeros(shape=(img_array.shape[0], img_array.shape[1]), dtype='uint16')
@@ -61,11 +61,30 @@ def process_image(im):
         for y in range (0, img_array.shape[1]):
             # print "Working on (%s, %s)" % (x, y)
             filtered_pixel_value = filter_pixel_new(x, y, img_array)
-            new_img[x][y]=filtered_pixel_value
+            new_img[x][y] = filtered_pixel_value
             new_img[x][y] = get_16bit_pixel_value(x, y, img_array)
+
+    normalize(new_img)
 
     imsave('test_output.tif', data=(new_img), shape=(img_array.shape))
     # newImg.show()
+
+
+def normalize(new_img):
+    norm_img = np.zeros(shape=(new_img.shape[0], new_img.shape[1]), dtype='uint16')
+    old_max = new_img.max()
+    old_min = new_img.min()
+    old_range = old_max - old_min
+
+    newmin = 0
+    newmax = 65536
+    newrange = newmax - newmin
+
+    for x in range (0, new_img.shape[0]):
+        for y in range (0, new_img.shape[1]):
+            norm_img[x][y] = old_max * ((get_16bit_pixel_value(x, y, new_img) - old_min) / old_range)
+
+    print norm_img
 
 
 def filter_pixel(x, y, img_array):
@@ -79,7 +98,7 @@ def filter_pixel(x, y, img_array):
     r = find_radius(xl, yl)
     varphi = calculate_degrees(xl, yl, q)
 
-    cartesian_x, cartesian_y = polToCar(r, varphi)
+    cartesian_x, cartesian_y = pol_to_car(r, varphi)
     cartesian_x += x0
     cartesian_y = y0 - cartesian_y
     print "******** Normal Pixel Value ******** %s" % get_16bit_pixel_value(int(round(cartesian_x)), int(round(cartesian_y)), img_array)
@@ -110,7 +129,7 @@ def filter_pixel(x, y, img_array):
             phi_param_for_f = angle_addition(phi_index, varphi)
             print "f() function is done on %s and %s values" % (rho_param_for_f, phi_param_for_f)
 
-            c_x, c_y = polToCar(rho_param_for_f, phi_param_for_f)
+            c_x, c_y = pol_to_car(rho_param_for_f, phi_param_for_f)
             # c_x += x0
             # c_y = y0 - c_y
             pv = get_16bit_pixel_value(int(round(c_x)), int(round(c_y)), img_array)
@@ -140,6 +159,7 @@ def carToPol(x,y, x_c, y_c):
     varphi = calculate_degrees(xl, yl, q)
     return r, varphi
 
+
 def filter_pixel_new(x, y, img_array):
     # print "starting loop for %d, %d" % (x, y)
     x0 = 66
@@ -153,7 +173,7 @@ def filter_pixel_new(x, y, img_array):
 
     r, varphi = carToPol(x, y, x0, y0)
 
-    cartesian_x, cartesian_y = polToCar(r, varphi)
+    cartesian_x, cartesian_y = pol_to_car(r, varphi)
     cartesian_x += x0
     cartesian_y = y0 - cartesian_y
     # print "******** Normal Pixel Value ******** %s" % get_16bit_pixel_value(int(round(cartesian_x)), int(round(cartesian_y)), img_array)
@@ -181,7 +201,7 @@ def filter_pixel_new(x, y, img_array):
     while rho_index < upper_rho:
         while phi_index < upper_phi:
             # print "Current Rho is %f and Current Phi is %f " % (rho_index, phi_index)
-            neighbour_x, neighbour_y = polToCar(rho_index, phi_index)
+            neighbour_x, neighbour_y = pol_to_car(rho_index, phi_index)
             neighbour_x = int(round(x0 + neighbour_x))
             neighbour_y = int(round(y0 - neighbour_y))
             pv = get_16bit_pixel_value(int(round(neighbour_x)), int(round(neighbour_y)), img_array)
@@ -209,6 +229,7 @@ def read_tiff_using_libtiff():
     tiff = TIFF.open('filename')
     image = tiff.read_image()
     return image
+
 
 def readTIFF16():
     """Read 16bits TIFF"""
@@ -238,7 +259,7 @@ def calculate_pixel_offset(x, y, q, x0, y0):
     return [x - x0, y0 - y]
 
 
-def polToCar(radius, varphi):
+def pol_to_car(radius, varphi):
     # print "varphi in degrees: %f" % varphi
     x_coordinate = radius * np.cos(abs(varphi))
     y_coordinate = radius * np.sin(abs(varphi))
@@ -262,6 +283,7 @@ def get_16bit_pixel_value(x, y, img_array):
         return img_array[x][y]
     except IndexError:
         return 0
+    
 
 def get_pixel_value(x, y, img):
     # print x, y
@@ -352,15 +374,6 @@ def calculate_kernel(rho, phi, r, varphi):
     # print "**************"
 
 
-def normalize(coeffecients):
-    coeffecients.sort()
-    denominator = coeffecients[len(coeffecients)-1] - coeffecients[0] #maxValue - minValue
-    for c in coeffecients:
-        c = (c - coeffecients[0]) / runningTotal
-        print c
-    print coeffecients
-    return
-
 
 def copy_image(o_img):
     return Image.new(o_img.mode, o_img.size)
@@ -373,7 +386,7 @@ def write_img_test(im):
     while r > 0:
         while deg > 0:
             try:
-                x, y = polToCar(r, deg)
+                x, y = pol_to_car(r, deg)
                 print x, y
                 im.putpixel((x,y), (0,0,255,255))
             except IndexError:
@@ -401,7 +414,7 @@ def write_img_with_polar_car(img, o_img):
 
             # print "polar coordinate %s, %s" % (r, varphi)
 
-            carX, carY = polToCar(r, varphi)
+            carX, carY = pol_to_car(r, varphi)
             # print "Pol2Car before adjusting %s, %s" % (round(carX), round(carY))
             carX += x0
             carY = y0-carY
@@ -428,7 +441,7 @@ def test_this_pixel(x, y, img):
     print "Radius %s: " %  radius
     radians = calculate_degrees(xl, yl, q)
     print "Radians %s: " %  radians
-    x_new, y_new = polToCar(radius, radians)
+    x_new, y_new = pol_to_car(radius, radians)
     print "Recalculated Cartesian: %s, %s" %  (x_new, y_new)
     x_new += 66
     y_new = 66 - y_new
@@ -448,16 +461,15 @@ o_img = read_image()
 # read_tiff_using_tifffle()
 
 # read_tiff_using_libtiff()
-filter_pixel_new(20, 20, read_tiff_using_tifffle())
+# filter_pixel_new(20, 20, read_tiff_using_tifffle())
 
 # write_img_with_polar_car(c_img, o_img)
 # write_img_test(c_img)
 
-# process_image(o_img)
+process_image()
 # calculate_degrees(32, -19, 3)
 # calculate_degrees(22, 24,1)
 # calculate_degrees(0,0, 4)
 # calculate_degrees(-43,-21,2)
 
-# normalize(coeffecients)
 # plt.show()
